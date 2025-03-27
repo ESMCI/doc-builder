@@ -7,7 +7,7 @@ import pathlib
 from doc_builder import sys_utils
 
 # The Docker image used to build documentation via Docker
-DOCKER_IMAGE = "ctsm-docs-test10"
+DOCKER_IMAGE = "ctsm-docs-testalpine-01"
 
 # The path in Docker's filesystem where the user's home directory is mounted
 _DOCKER_HOME = "/home/user/mounted_home"
