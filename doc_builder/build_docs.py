@@ -111,7 +111,8 @@ based on the version indicated by the current branch, is:
 
     options = parser.parse_args(cmdline_args)
 
-    if options.docker_image and not options.build_with_docker:
+    if options.docker_image:
+        options.docker_image = options.docker_image.lower()
         options.build_with_docker = True
 
     return options
