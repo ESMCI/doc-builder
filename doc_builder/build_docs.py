@@ -94,8 +94,8 @@ based on the version indicated by the current branch, is:
 
     parser.add_argument(
         "-i", "--docker-image", "--docker-container",
-        default=default_docker_image,
-        help=f"Docker container to use. Implies -d. Default: {default_docker_image}"
+        default=None,
+        help="Docker container to use. Implies -d."
     )
 
     parser.add_argument("-t", "--build-target", default="html",
@@ -114,6 +114,8 @@ based on the version indicated by the current branch, is:
     if options.docker_image:
         options.docker_image = options.docker_image.lower()
         options.build_with_docker = True
+    elif options.build_with_docker:
+        options.docker_image = default_docker_image
 
     return options
 
