@@ -6,7 +6,7 @@ import os
 import pathlib
 from doc_builder import sys_utils
 
-default_docker_image = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.0"
+default_docker_image = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 
 # The path in Docker's filesystem where the user's home directory is mounted
 _DOCKER_HOME = "/home/user/mounted_home"
