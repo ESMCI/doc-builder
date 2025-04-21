@@ -9,7 +9,7 @@ import random
 import string
 import sys
 import signal
-from doc_builder.build_commands import get_build_dir, get_build_command, DOCKER_IMAGE
+from doc_builder.build_commands import get_build_dir, get_build_command, default_docker_image
 
 def commandline_options(cmdline_args=None):
     """Process the command-line arguments.
@@ -80,15 +80,23 @@ based on the version indicated by the current branch, is:
                         help="Before building, run 'make clean'.")
 
     parser.add_argument("-d", "--build-with-docker", action="store_true",
-                        help="Use the {docker_image} Docker container to build the documentation,\n"
+                        help="Use a Docker container to build the documentation,\n"
                         "rather than relying on locally-installed versions of Sphinx, etc.\n"
                         "This assumes that Docker is installed and running on your system.\n"
                         "\n"
                         "NOTE: This mounts your home directory in the Docker image.\n"
                         "Therefore, both the current directory (containing the Makefile for\n"
                         "building the documentation) and the documentation build directory\n"
-                        "must reside somewhere within your home directory.".format(
-                            docker_image=DOCKER_IMAGE))
+                        "must reside somewhere within your home directory."
+                        "\n"
+                        f"Default image: {default_docker_image}\n"
+                        "This can be changed with -i/--docker-image.")
+
+    parser.add_argument(
+        "-i", "--docker-image", "--docker-container",
+        default=None,
+        help="Docker container to use. Implies -d."
+    )
 
     parser.add_argument("-t", "--build-target", default="html",
                         help="Target for the make command.\n"
@@ -102,6 +110,13 @@ based on the version indicated by the current branch, is:
                         help="Treat sphinx warnings as warnings, not errors.")
 
     options = parser.parse_args(cmdline_args)
+
+    if options.docker_image:
+        options.docker_image = options.docker_image.lower()
+        options.build_with_docker = True
+    elif options.build_with_docker:
+        options.docker_image = default_docker_image
+
     return options
 
 def run_build_command(build_command):
@@ -168,7 +183,8 @@ def main(cmdline_args=None):
                                               run_from_dir=os.getcwd(),
                                               build_target="clean",
                                               num_make_jobs=opts.num_make_jobs,
-                                              docker_name=docker_name)
+                                              docker_name=docker_name,
+                                              docker_image=opts.docker_image)
             run_build_command(build_command=clean_command)
 
         build_command = get_build_command(build_dir=build_dir,
@@ -176,6 +192,7 @@ def main(cmdline_args=None):
                                           build_target=opts.build_target,
                                           num_make_jobs=opts.num_make_jobs,
                                           docker_name=docker_name,
+                                          docker_image=opts.docker_image,
                                           warnings_as_warnings=opts.warnings_as_warnings,
                                           )
         run_build_command(build_command=build_command)

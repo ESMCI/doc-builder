@@ -6,8 +6,7 @@ import os
 import pathlib
 from doc_builder import sys_utils
 
-# The Docker image used to build documentation via Docker
-DOCKER_IMAGE = "escomp/base"
+default_docker_image = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.0"
 
 # The path in Docker's filesystem where the user's home directory is mounted
 _DOCKER_HOME = "/home/user/mounted_home"
@@ -65,7 +64,7 @@ command-line argument '--doc-version {version}'""".format(build_dir=build_dir,
     return build_dir
 
 def get_build_command(build_dir, run_from_dir, build_target, num_make_jobs, docker_name=None,
-                      warnings_as_warnings=False,
+                      warnings_as_warnings=False, docker_image=default_docker_image,
                       ):
     """Return a string giving the build command.
 
@@ -109,6 +108,10 @@ def get_build_command(build_dir, run_from_dir, build_target, num_make_jobs, dock
         errmsg_if_not_under_mountpoint=
         "build directory must reside under your home directory")
 
+    # Get current user's UID and GID
+    uid = os.getuid()
+    gid = os.getgid()
+
     make_command = _get_make_command(build_dir=docker_build_dir,
                                      build_target=build_target,
                                      num_make_jobs=num_make_jobs,
@@ -117,12 +120,13 @@ def get_build_command(build_dir, run_from_dir, build_target, num_make_jobs, dock
 
     docker_command = ["docker", "run",
                       "--name", docker_name,
+                      "--user", f"{uid}:{gid}",
                       "--mount", "type=bind,source={},target={}".format(
                           docker_mountpoint, _DOCKER_HOME),
                       "--workdir", docker_workdir,
                       "-t",  # "-t" is needed for colorful output
                       "--rm",
-                      DOCKER_IMAGE] + make_command
+                      docker_image] + make_command
     return docker_command
 
 def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnings):
