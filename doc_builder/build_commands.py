@@ -50,7 +50,7 @@ def get_build_dir(build_dir=None, repo_root=None, version=None):
 
     build_dir_no_version = os.path.join(repo_root, "versions")
     if not os.path.isdir(build_dir_no_version):
-        raise RuntimeError("Directory {} doesn't exist".format(build_dir_no_version))
+        os.makedirs(build_dir_no_version)
     build_dir = os.path.join(build_dir_no_version, version)
     if not version_explicit:
         if not os.path.isdir(build_dir):
