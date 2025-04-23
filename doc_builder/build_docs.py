@@ -37,7 +37,7 @@ Simple usage is:
 
     Common additional flags are:
     -c: Before building, run 'make clean'
-    -d: Use the escomp/base Docker container to build the documentation
+    -d: Use the {default_docker_image} Docker container to build the documentation
 
 Usage for automatically determining the subdirectory in which to build,
 based on the version indicated by the current branch, is:
