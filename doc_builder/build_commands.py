@@ -59,9 +59,9 @@ command-line argument '--doc-version {version}'""".format(build_dir=build_dir,
                                                           version=version)
             raise RuntimeError(message)
 
-    return build_dir
+    return build_dir, version
 
-def get_build_command(build_dir, run_from_dir, build_target, num_make_jobs, docker_name=None,
+def get_build_command(build_dir, run_from_dir, build_target, version, num_make_jobs, docker_name=None,
                       warnings_as_warnings=False, docker_image=default_docker_image,
                       ):
     """Return a string giving the build command.
@@ -124,6 +124,7 @@ def get_build_command(build_dir, run_from_dir, build_target, num_make_jobs, dock
                       "--workdir", docker_workdir,
                       "-t",  # "-t" is needed for colorful output
                       "--rm",
+                      "-e", "current_version={}".format(version),
                       docker_image] + make_command
     return docker_command
 
