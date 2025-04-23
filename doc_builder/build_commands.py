@@ -39,14 +39,12 @@ def get_build_dir(build_dir=None, repo_root=None, version=None):
     if repo_root is None:
         raise RuntimeError("Must specify either build-dir or repo-root")
 
-    if version is None:
-        version_explicit = False
+    version_explicit = version is not None
+    if not version_explicit:
         branch_found, version = sys_utils.git_current_branch()
         if not branch_found:
             raise RuntimeError("Problem determining version based on git branch; "
                                "set --version on the command line.")
-    else:
-        version_explicit = True
 
     build_dir_no_version = os.path.join(repo_root, "versions")
     if not os.path.isdir(build_dir_no_version):
