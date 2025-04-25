@@ -143,7 +143,7 @@ class TestGetBuildCommand(unittest.TestCase):
         mock_expanduser.return_value = "/path/to/username"
         with self.assertRaisesRegex(
             RuntimeError,
-            "build_docs must be run from somewhere within your home directory",
+            "build_docs must be run from somewhere in your home directory",
         ):
             _ = get_build_command(
                 build_dir="/path/to/username/foorepos/foodocs/versions/main",
