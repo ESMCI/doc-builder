@@ -88,6 +88,12 @@ jobs:
           cd test
           conda run -n doc-builder-testing make lint
 
+      - name: Black
+        if: success() || failure()
+        run: |
+          cd test
+          conda run -n doc-builder-testing make black
+
       - name: Unit/system tests
         if: success() || failure()
         run: |
