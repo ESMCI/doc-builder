@@ -50,7 +50,7 @@ html:
 \t@echo "hello world" > $(BUILDDIR)/testfile
 """
 
-        with open('Makefile', 'w') as makefile:
+        with open('Makefile', 'w', encoding="utf-8") as makefile:
             makefile.write(makefile_contents)
 
     def assert_file_contents_equal(self, expected, filepath, msg=None):
@@ -58,7 +58,7 @@ html:
         the string given by 'expected'. 'msg' gives an optional message to be
         printed if the assertion fails."""
 
-        with open(filepath, 'r') as myfile:
+        with open(filepath, 'r', encoding="utf-8") as myfile:
             contents = myfile.read()
 
         self.assertEqual(expected, contents, msg=msg)

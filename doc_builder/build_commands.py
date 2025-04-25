@@ -52,11 +52,10 @@ def get_build_dir(build_dir=None, repo_root=None, version=None):
     build_dir = os.path.join(build_dir_no_version, version)
     if not version_explicit:
         if not os.path.isdir(build_dir):
-            message = """
+            message = f"""
 Directory {build_dir} doesn't exist yet.
 If this is where you really want to build the documentation, rerun adding the
-command-line argument '--doc-version {version}'""".format(build_dir=build_dir,
-                                                          version=version)
+command-line argument '--doc-version {version}'"""
             raise RuntimeError(message)
 
     return build_dir, version
@@ -126,13 +125,13 @@ def get_build_command(
 
     docker_command = ["docker", "run",
                       "--name", docker_name,
-                      "--user", "{}:{}".format(uid, gid),
-                      "--mount", "type=bind,source={},target={}".format(
-                          docker_mountpoint, _DOCKER_HOME),
+                      "--user", f"{uid}:{gid}",
+                      "--mount",
+                      f"type=bind,source={docker_mountpoint},target={_DOCKER_HOME}",
                       "--workdir", docker_workdir,
                       "-t",  # "-t" is needed for colorful output
                       "--rm",
-                      "-e", "current_version={}".format(version),
+                      "-e", f"current_version={version}",
                       docker_image] + make_command
     return docker_command
 
@@ -144,7 +143,7 @@ def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnin
     - build_target: string: target for the make command (e.g., "html")
     - num_make_jobs: int: number of parallel jobs
     """
-    builddir_arg = "BUILDDIR={}".format(build_dir)
+    builddir_arg = f"BUILDDIR={build_dir}"
     sphinxopts = "SPHINXOPTS="
     if not warnings_as_warnings:
         sphinxopts += "-W --keep-going"
@@ -161,7 +160,7 @@ def _docker_path_from_local_path(local_path, docker_mountpoint, errmsg_if_not_un
         reside under docker_mountpoint
     """
     if not os.path.isabs(local_path):
-        raise RuntimeError("Expect absolute path; got {}".format(local_path))
+        raise RuntimeError(f"Expect absolute path; got {local_path}")
 
     local_pathobj = pathlib.Path(local_path)
     try:

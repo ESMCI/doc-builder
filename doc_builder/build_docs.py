@@ -89,7 +89,7 @@ based on the version indicated by the current branch, is:
                         "building the documentation) and the documentation build directory\n"
                         "must reside somewhere within your home directory."
                         "\n"
-                        "Default image: {}\n".format(DEFAULT_DOCKER_IMAGE) +
+                        f"Default image: {DEFAULT_DOCKER_IMAGE}\n"
                         "This can be changed with -i/--docker-image.")
 
     parser.add_argument(

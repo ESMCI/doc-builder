@@ -23,7 +23,7 @@ class TestGetBuildCommand(unittest.TestCase):
         # Get current user's UID and GID
         uid = os.getuid()
         gid = os.getgid()
-        self.uid_gid = "{}:{}".format(uid, gid)
+        self.uid_gid = f"{uid}:{gid}"
 
     def test_basic(self):
         """Tests basic usage"""

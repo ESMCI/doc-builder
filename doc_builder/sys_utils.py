@@ -14,7 +14,7 @@ def git_current_branch():
     also be false if we're not in a git repository.)
     """
     cmd = ['git', 'symbolic-ref', '--short', '-q', 'HEAD']
-    with open(os.devnull, 'w') as devnull:
+    with open(os.devnull, 'w', encoding="utf-8") as devnull:
         try:
             # Suppress stderr because we don't want to clutter output with
             # git's message, e.g., if we're not in a git repository.
