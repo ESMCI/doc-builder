@@ -1,6 +1,6 @@
 # Requirements for running the tests here
 
-- pylint (pip install pylint)
+See python3.5_test_conda.yml.
 
 # Tests to run
 

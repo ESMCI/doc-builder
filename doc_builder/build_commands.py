@@ -6,7 +6,7 @@ import os
 import pathlib
 from doc_builder import sys_utils
 
-default_docker_image = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
+DEFAULT_DOCKER_IMAGE = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 
 # The path in Docker's filesystem where the user's home directory is mounted
 _DOCKER_HOME = "/home/user/mounted_home"
@@ -34,38 +34,43 @@ def get_build_dir(build_dir=None, repo_root=None, version=None):
             raise RuntimeError("Cannot specify both build-dir and repo-root")
         if version is not None:
             raise RuntimeError("Cannot specify both build-dir and version")
-        return build_dir
+        return build_dir, "None"
 
     if repo_root is None:
         raise RuntimeError("Must specify either build-dir or repo-root")
 
-    if version is None:
-        version_explicit = False
+    version_explicit = version is not None
+    if not version_explicit:
         branch_found, version = sys_utils.git_current_branch()
         if not branch_found:
             raise RuntimeError("Problem determining version based on git branch; "
                                "set --version on the command line.")
-    else:
-        version_explicit = True
 
     build_dir_no_version = os.path.join(repo_root, "versions")
     if not os.path.isdir(build_dir_no_version):
-        raise RuntimeError("Directory {} doesn't exist".format(build_dir_no_version))
+        os.makedirs(build_dir_no_version)
     build_dir = os.path.join(build_dir_no_version, version)
     if not version_explicit:
         if not os.path.isdir(build_dir):
-            message = """
+            message = f"""
 Directory {build_dir} doesn't exist yet.
 If this is where you really want to build the documentation, rerun adding the
-command-line argument '--doc-version {version}'""".format(build_dir=build_dir,
-                                                          version=version)
+command-line argument '--doc-version {version}'"""
             raise RuntimeError(message)
 
-    return build_dir
+    return build_dir, version
 
-def get_build_command(build_dir, run_from_dir, build_target, num_make_jobs, docker_name=None,
-                      warnings_as_warnings=False, docker_image=default_docker_image,
-                      ):
+def get_build_command(
+    build_dir,
+    run_from_dir,
+    build_target,
+    version,
+    num_make_jobs,
+    docker_name=None,
+    warnings_as_warnings=False,
+    docker_image=DEFAULT_DOCKER_IMAGE,
+):
+    # pylint: disable=too-many-arguments,too-many-locals
     """Return a string giving the build command.
 
     Args:
@@ -121,11 +126,12 @@ def get_build_command(build_dir, run_from_dir, build_target, num_make_jobs, dock
     docker_command = ["docker", "run",
                       "--name", docker_name,
                       "--user", f"{uid}:{gid}",
-                      "--mount", "type=bind,source={},target={}".format(
-                          docker_mountpoint, _DOCKER_HOME),
+                      "--mount",
+                      f"type=bind,source={docker_mountpoint},target={_DOCKER_HOME}",
                       "--workdir", docker_workdir,
                       "-t",  # "-t" is needed for colorful output
                       "--rm",
+                      "-e", f"current_version={version}",
                       docker_image] + make_command
     return docker_command
 
@@ -137,7 +143,7 @@ def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnin
     - build_target: string: target for the make command (e.g., "html")
     - num_make_jobs: int: number of parallel jobs
     """
-    builddir_arg = "BUILDDIR={}".format(build_dir)
+    builddir_arg = f"BUILDDIR={build_dir}"
     sphinxopts = "SPHINXOPTS="
     if not warnings_as_warnings:
         sphinxopts += "-W --keep-going"
@@ -154,13 +160,13 @@ def _docker_path_from_local_path(local_path, docker_mountpoint, errmsg_if_not_un
         reside under docker_mountpoint
     """
     if not os.path.isabs(local_path):
-        raise RuntimeError("Expect absolute path; got {}".format(local_path))
+        raise RuntimeError(f"Expect absolute path; got {local_path}")
 
     local_pathobj = pathlib.Path(local_path)
     try:
         relpath = local_pathobj.relative_to(docker_mountpoint)
-    except ValueError:
-        raise RuntimeError(errmsg_if_not_under_mountpoint)
+    except ValueError as err:
+        raise RuntimeError(errmsg_if_not_under_mountpoint) from err
 
     # I think we need to do this conversion to a PosixPath for the sake of Windows
     # machines, where relpath is a Windows-style path, but we want Posix paths for

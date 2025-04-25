@@ -9,7 +9,7 @@ import random
 import string
 import sys
 import signal
-from doc_builder.build_commands import get_build_dir, get_build_command, default_docker_image
+from doc_builder.build_commands import get_build_dir, get_build_command, DEFAULT_DOCKER_IMAGE
 
 def commandline_options(cmdline_args=None):
     """Process the command-line arguments.
@@ -37,7 +37,7 @@ Simple usage is:
 
     Common additional flags are:
     -c: Before building, run 'make clean'
-    -d: Use the escomp/base Docker container to build the documentation
+    -d: Use the {DEFAULT_DOCKER_IMAGE} Docker container to build the documentation
 
 Usage for automatically determining the subdirectory in which to build,
 based on the version indicated by the current branch, is:
@@ -89,7 +89,7 @@ based on the version indicated by the current branch, is:
                         "building the documentation) and the documentation build directory\n"
                         "must reside somewhere within your home directory."
                         "\n"
-                        f"Default image: {default_docker_image}\n"
+                        f"Default image: {DEFAULT_DOCKER_IMAGE}\n"
                         "This can be changed with -i/--docker-image.")
 
     parser.add_argument(
@@ -115,15 +115,17 @@ based on the version indicated by the current branch, is:
         options.docker_image = options.docker_image.lower()
         options.build_with_docker = True
     elif options.build_with_docker:
-        options.docker_image = default_docker_image
+        options.docker_image = DEFAULT_DOCKER_IMAGE
 
     return options
 
-def run_build_command(build_command):
+def run_build_command(build_command, version):
     """Echo and then run the given build command"""
     build_command_str = ' '.join(build_command)
     print(build_command_str)
-    subprocess.check_call(build_command)
+    env = os.environ.copy()
+    env["current_version"] = version
+    subprocess.check_call(build_command, env=env)
 
 def setup_for_docker():
     """Do some setup for running with docker
@@ -174,25 +176,29 @@ def main(cmdline_args=None):
     # the other versions (if that gives the correct end result).
     for version in opts.doc_version:
 
-        build_dir = get_build_dir(build_dir=opts.build_dir,
-                                  repo_root=opts.repo_root,
-                                  version=version)
+        build_dir, version = get_build_dir(
+            build_dir=opts.build_dir,
+            repo_root=opts.repo_root,
+            version=version
+        )
 
         if opts.clean:
             clean_command = get_build_command(build_dir=build_dir,
                                               run_from_dir=os.getcwd(),
                                               build_target="clean",
                                               num_make_jobs=opts.num_make_jobs,
+                                              version=version,
                                               docker_name=docker_name,
                                               docker_image=opts.docker_image)
-            run_build_command(build_command=clean_command)
+            run_build_command(build_command=clean_command, version=version)
 
         build_command = get_build_command(build_dir=build_dir,
                                           run_from_dir=os.getcwd(),
                                           build_target=opts.build_target,
                                           num_make_jobs=opts.num_make_jobs,
+                                          version=version,
                                           docker_name=docker_name,
                                           docker_image=opts.docker_image,
                                           warnings_as_warnings=opts.warnings_as_warnings,
                                           )
-        run_build_command(build_command=build_command)
+        run_build_command(build_command=build_command, version=version)
