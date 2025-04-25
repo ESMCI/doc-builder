@@ -19,6 +19,7 @@ jobs:
     name: Test in Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # If testing with in "act" on Macs, make sure to add '--container-architecture linux/amd64'.
         # Even then, old Python versions might not be available.
