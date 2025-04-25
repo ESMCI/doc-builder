@@ -10,5 +10,5 @@ building the documentation.
 
 from doc_builder import build_docs
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     build_docs.main()
