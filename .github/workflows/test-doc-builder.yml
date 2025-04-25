@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         # If testing with in "act" on Macs, make sure to add '--container-architecture linux/amd64'.
-        python-version: [3.6]
+        python-version: [3.7]
     steps:
       - uses: actions/checkout@v4
         with:
