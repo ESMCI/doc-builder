@@ -7,13 +7,17 @@ import unittest
 import tempfile
 import shutil
 import os
-from test.test_utils.git_helpers import (make_git_repo,
-                                         add_git_commit,
-                                         checkout_git_branch)
+from test.test_utils.git_helpers import (
+    make_git_repo,
+    add_git_commit,
+    checkout_git_branch,
+)
 from doc_builder import build_docs
+
 
 class TestBuildDocs(unittest.TestCase):
     """High-level system tests of build_docs"""
+
     # Allow long method names
     # pylint: disable=invalid-name
 
@@ -50,7 +54,7 @@ html:
 \t@echo "hello world" > $(BUILDDIR)/testfile
 """
 
-        with open('Makefile', 'w', encoding="utf-8") as makefile:
+        with open("Makefile", "w", encoding="utf-8") as makefile:
             makefile.write(makefile_contents)
 
     def assert_file_contents_equal(self, expected, filepath, msg=None):
@@ -58,7 +62,7 @@ html:
         the string given by 'expected'. 'msg' gives an optional message to be
         printed if the assertion fails."""
 
-        with open(filepath, 'r', encoding="utf-8") as myfile:
+        with open(filepath, "r", encoding="utf-8") as myfile:
             contents = myfile.read()
 
         self.assertEqual(expected, contents, msg=msg)
@@ -75,16 +79,16 @@ html:
         self.write_makefile()
         make_git_repo()
         add_git_commit()
-        checkout_git_branch('foo_branch')
-        build_path = os.path.join(self._build_versions_dir,
-                                  "foo_branch")
+        checkout_git_branch("foo_branch")
+        build_path = os.path.join(self._build_versions_dir, "foo_branch")
         os.makedirs(build_path)
 
         args = ["--repo-root", self._build_reporoot]
         build_docs.main(args)
 
-        self.assert_file_contents_equal(expected="hello world\n",
-                                        filepath=os.path.join(build_path, "testfile"))
+        self.assert_file_contents_equal(
+            expected="hello world\n", filepath=os.path.join(build_path, "testfile")
+        )
 
     def test_multiple_versions(self):
         """Test with multiple versions being specified at once"""
@@ -95,14 +99,16 @@ html:
         # Note that, since we're specifying the versions explicitly, we
         # shouldn't need to make the v1 and v2 directories ahead of time.
 
-        args = ["--repo-root", self._build_reporoot,
-                "--doc-version", "v1", "v2"]
+        args = ["--repo-root", self._build_reporoot, "--doc-version", "v1", "v2"]
         build_docs.main(args)
 
-        self.assert_file_contents_equal(expected="hello world\n",
-                                        filepath=os.path.join(build_path1, "testfile"))
-        self.assert_file_contents_equal(expected="hello world\n",
-                                        filepath=os.path.join(build_path2, "testfile"))
+        self.assert_file_contents_equal(
+            expected="hello world\n", filepath=os.path.join(build_path1, "testfile")
+        )
+        self.assert_file_contents_equal(
+            expected="hello world\n", filepath=os.path.join(build_path2, "testfile")
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

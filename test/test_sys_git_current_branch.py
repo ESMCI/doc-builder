@@ -9,12 +9,15 @@ import unittest
 import tempfile
 import shutil
 import os
-from test.test_utils.git_helpers import (make_git_repo,
-                                         add_git_commit,
-                                         checkout_git_branch,
-                                         make_git_tag,
-                                         checkout_git_ref)
+from test.test_utils.git_helpers import (
+    make_git_repo,
+    add_git_commit,
+    checkout_git_branch,
+    make_git_tag,
+    checkout_git_ref,
+)
 from doc_builder.sys_utils import git_current_branch
+
 
 class TestGitCurrentBranch(unittest.TestCase):
     """Test the git_current_branch function"""
@@ -40,26 +43,27 @@ class TestGitCurrentBranch(unittest.TestCase):
         """If not a git repository, should return (False, '')"""
         branch_found, branch_name = git_current_branch()
         self.assertFalse(branch_found)
-        self.assertEqual('', branch_name)
+        self.assertEqual("", branch_name)
 
     def test_on_branch(self):
         """If on a git branch, should return (True, branchname)"""
         make_git_repo()
         add_git_commit()
-        checkout_git_branch('foo')
+        checkout_git_branch("foo")
         branch_found, branch_name = git_current_branch()
         self.assertTrue(branch_found)
-        self.assertEqual('foo', branch_name)
+        self.assertEqual("foo", branch_name)
 
     def test_not_on_branch(self):
         """If in a git repository but not on a branch, should return (False, '')"""
         make_git_repo()
         add_git_commit()
-        make_git_tag('mytag')
-        checkout_git_ref('mytag')
+        make_git_tag("mytag")
+        checkout_git_ref("mytag")
         branch_found, branch_name = git_current_branch()
         self.assertFalse(branch_found)
-        self.assertEqual('', branch_name)
+        self.assertEqual("", branch_name)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

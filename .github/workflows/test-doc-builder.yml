@@ -14,6 +14,58 @@ on:
 permissions:
   contents: read
 jobs:
+
+  test-python-oldest:
+    name: Test in Python ${{ matrix.python-version }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        # If testing with in "act" on Macs, make sure to add '--container-architecture linux/amd64'.
+        python-version: [3.7]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Unit/system tests
+        if: success() || failure()
+        run: |
+          make -C test
+        # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
+
+  test-python-latest:
+    name: Test in Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # If testing with in "act" on Macs, make sure to add '--container-architecture linux/amd64'.
+        # Even then, old Python versions might not be available.
+        python-version: [3.x]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Unit/system tests
+        if: success() || failure()
+        run: |
+          make -C test
+        # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
+
   lint-and-test-conda:
     name: Lint and test in Conda env
     runs-on: ubuntu-latest
@@ -26,28 +78,34 @@ jobs:
       - name: Set up conda environment
         uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: doc-builder-python3.6
-          environment-file: test/python3.6_test_conda.yml
+          activate-environment: doc-builder-testing
+          environment-file: test/python_test_conda.yml
           channels: conda-forge
           auto-activate-base: false
 
       - name: Pylint
         run: |
           cd test
-          conda run -n doc-builder-python3.6 make lint
+          conda run -n doc-builder-testing make lint
+
+      - name: Black
+        if: success() || failure()
+        run: |
+          cd test
+          conda run -n doc-builder-testing make black
 
       - name: Unit/system tests
         if: success() || failure()
         run: |
-          conda run -n doc-builder-python3.6 make -C test
+          conda run -n doc-builder-testing make -C test
         # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
 
-  # File an issue if test failed during a scheduled or manual run
+  # File an issue if any of above jobs failed during a scheduled or manual run
   file-issue-on-failure:
     if: |
-      failure() &&
+      (needs.test-python-oldest.result == 'failure' || needs.test-python-latest.result == 'failure' || needs.lint-and-test-conda.result == 'failure') &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-    needs: lint-and-test-conda
+    needs: [test-python-oldest, test-python-latest, lint-and-test-conda]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -60,4 +118,3 @@ jobs:
           filename: .github/workflows/docs-ctsm_pylib.issue_template.md
           update_existing: true
           search_existing: open
-

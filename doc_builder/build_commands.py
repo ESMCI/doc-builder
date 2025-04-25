@@ -11,6 +11,7 @@ DEFAULT_DOCKER_IMAGE = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 # The path in Docker's filesystem where the user's home directory is mounted
 _DOCKER_HOME = "/home/user/mounted_home"
 
+
 def get_build_dir(build_dir=None, repo_root=None, version=None):
     """Return a string giving the path to the build directory.
 
@@ -43,8 +44,10 @@ def get_build_dir(build_dir=None, repo_root=None, version=None):
     if not version_explicit:
         branch_found, version = sys_utils.git_current_branch()
         if not branch_found:
-            raise RuntimeError("Problem determining version based on git branch; "
-                               "set --version on the command line.")
+            raise RuntimeError(
+                "Problem determining version based on git branch; "
+                "set --version on the command line."
+            )
 
     build_dir_no_version = os.path.join(repo_root, "versions")
     if not os.path.isdir(build_dir_no_version):
@@ -59,6 +62,7 @@ command-line argument '--doc-version {version}'"""
             raise RuntimeError(message)
 
     return build_dir, version
+
 
 def get_build_command(
     build_dir,
@@ -84,24 +88,26 @@ def get_build_command(
         with the given name
     """
     if docker_name is None:
-        return _get_make_command(build_dir=build_dir,
-                                 build_target=build_target,
-                                 num_make_jobs=num_make_jobs,
-                                 warnings_as_warnings=warnings_as_warnings,
-                                 )
+        return _get_make_command(
+            build_dir=build_dir,
+            build_target=build_target,
+            num_make_jobs=num_make_jobs,
+            warnings_as_warnings=warnings_as_warnings,
+        )
 
     # But if we're using Docker, we have more work to do to create the command....
 
     # Mount the user's home directory in the Docker image; this assumes that both
     # run_from_dir and build_dir reside somewhere under the user's home directory (we
     # check this assumption below).
-    docker_mountpoint = os.path.expanduser('~')
+    docker_mountpoint = os.path.expanduser("~")
 
+    errmsg_if_not_under_mountpoint = "build_docs must be run from somewhere in your home directory"
     docker_workdir = _docker_path_from_local_path(
         local_path=run_from_dir,
         docker_mountpoint=docker_mountpoint,
-        errmsg_if_not_under_mountpoint=
-        "build_docs must be run from somewhere within your home directory")
+        errmsg_if_not_under_mountpoint=errmsg_if_not_under_mountpoint,
+    )
 
     if os.path.isabs(build_dir):
         build_dir_abs = build_dir
@@ -110,30 +116,39 @@ def get_build_command(
     docker_build_dir = _docker_path_from_local_path(
         local_path=build_dir_abs,
         docker_mountpoint=docker_mountpoint,
-        errmsg_if_not_under_mountpoint=
-        "build directory must reside under your home directory")
+        errmsg_if_not_under_mountpoint="build directory must reside under your home directory",
+    )
 
     # Get current user's UID and GID
     uid = os.getuid()
     gid = os.getgid()
 
-    make_command = _get_make_command(build_dir=docker_build_dir,
-                                     build_target=build_target,
-                                     num_make_jobs=num_make_jobs,
-                                     warnings_as_warnings=warnings_as_warnings,
-                                     )
+    make_command = _get_make_command(
+        build_dir=docker_build_dir,
+        build_target=build_target,
+        num_make_jobs=num_make_jobs,
+        warnings_as_warnings=warnings_as_warnings,
+    )
 
-    docker_command = ["docker", "run",
-                      "--name", docker_name,
-                      "--user", f"{uid}:{gid}",
-                      "--mount",
-                      f"type=bind,source={docker_mountpoint},target={_DOCKER_HOME}",
-                      "--workdir", docker_workdir,
-                      "-t",  # "-t" is needed for colorful output
-                      "--rm",
-                      "-e", f"current_version={version}",
-                      docker_image] + make_command
+    docker_command = [
+        "docker",
+        "run",
+        "--name",
+        docker_name,
+        "--user",
+        f"{uid}:{gid}",
+        "--mount",
+        f"type=bind,source={docker_mountpoint},target={_DOCKER_HOME}",
+        "--workdir",
+        docker_workdir,
+        "-t",  # "-t" is needed for colorful output
+        "--rm",
+        "-e",
+        f"current_version={version}",
+        docker_image,
+    ] + make_command
     return docker_command
+
 
 def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnings):
     """Return the make command to run (as a list)
@@ -148,6 +163,7 @@ def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnin
     if not warnings_as_warnings:
         sphinxopts += "-W --keep-going"
     return ["make", sphinxopts, builddir_arg, "-j", str(num_make_jobs), build_target]
+
 
 def _docker_path_from_local_path(local_path, docker_mountpoint, errmsg_if_not_under_mountpoint):
     """Given a path on the local file system, return the equivalent path in Docker space
