@@ -38,7 +38,6 @@ jobs:
         if: success() || failure()
         run: |
           make -C test
-          exit 1
         # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
 
   lint-and-test-conda:
