@@ -6,7 +6,7 @@ import os
 import pathlib
 from doc_builder import sys_utils
 
-default_docker_image = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
+DEFAULT_DOCKER_IMAGE = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 
 # The path in Docker's filesystem where the user's home directory is mounted
 _DOCKER_HOME = "/home/user/mounted_home"
@@ -61,9 +61,17 @@ command-line argument '--doc-version {version}'""".format(build_dir=build_dir,
 
     return build_dir, version
 
-def get_build_command(build_dir, run_from_dir, build_target, version, num_make_jobs, docker_name=None,
-                      warnings_as_warnings=False, docker_image=default_docker_image,
-                      ):
+def get_build_command(
+    build_dir,
+    run_from_dir,
+    build_target,
+    version,
+    num_make_jobs,
+    docker_name=None,
+    warnings_as_warnings=False,
+    docker_image=DEFAULT_DOCKER_IMAGE,
+):
+    # pylint: disable=too-many-arguments,too-many-locals
     """Return a string giving the build command.
 
     Args:
@@ -118,7 +126,7 @@ def get_build_command(build_dir, run_from_dir, build_target, version, num_make_j
 
     docker_command = ["docker", "run",
                       "--name", docker_name,
-                      "--user", f"{uid}:{gid}",
+                      "--user", "{}:{}".format(uid, gid),
                       "--mount", "type=bind,source={},target={}".format(
                           docker_mountpoint, _DOCKER_HOME),
                       "--workdir", docker_workdir,
@@ -158,8 +166,8 @@ def _docker_path_from_local_path(local_path, docker_mountpoint, errmsg_if_not_un
     local_pathobj = pathlib.Path(local_path)
     try:
         relpath = local_pathobj.relative_to(docker_mountpoint)
-    except ValueError:
-        raise RuntimeError(errmsg_if_not_under_mountpoint)
+    except ValueError as err:
+        raise RuntimeError(errmsg_if_not_under_mountpoint) from err
 
     # I think we need to do this conversion to a PosixPath for the sake of Windows
     # machines, where relpath is a Windows-style path, but we want Posix paths for

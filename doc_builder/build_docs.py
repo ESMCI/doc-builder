@@ -9,7 +9,7 @@ import random
 import string
 import sys
 import signal
-from doc_builder.build_commands import get_build_dir, get_build_command, default_docker_image
+from doc_builder.build_commands import get_build_dir, get_build_command, DEFAULT_DOCKER_IMAGE
 
 def commandline_options(cmdline_args=None):
     """Process the command-line arguments.
@@ -37,7 +37,7 @@ Simple usage is:
 
     Common additional flags are:
     -c: Before building, run 'make clean'
-    -d: Use the {default_docker_image} Docker container to build the documentation
+    -d: Use the {DEFAULT_DOCKER_IMAGE} Docker container to build the documentation
 
 Usage for automatically determining the subdirectory in which to build,
 based on the version indicated by the current branch, is:
@@ -89,7 +89,7 @@ based on the version indicated by the current branch, is:
                         "building the documentation) and the documentation build directory\n"
                         "must reside somewhere within your home directory."
                         "\n"
-                        f"Default image: {default_docker_image}\n"
+                        "Default image: {}\n".format(DEFAULT_DOCKER_IMAGE) +
                         "This can be changed with -i/--docker-image.")
 
     parser.add_argument(
@@ -115,7 +115,7 @@ based on the version indicated by the current branch, is:
         options.docker_image = options.docker_image.lower()
         options.build_with_docker = True
     elif options.build_with_docker:
-        options.docker_image = default_docker_image
+        options.docker_image = DEFAULT_DOCKER_IMAGE
 
     return options
 
