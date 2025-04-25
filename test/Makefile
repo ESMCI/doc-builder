@@ -61,6 +61,10 @@ test : utest stest
 lint : FORCE
 	$(PYLINT) $(PYLINT_ARGS) $(SRC) $(TEST_DIR)/test_*.py
 
+.PHONY : black
+black : FORCE
+	black --check $(SRC) $(TEST_DIR)/test_*.py
+
 #
 # utilites
 #
