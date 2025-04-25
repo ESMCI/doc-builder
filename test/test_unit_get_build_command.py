@@ -3,6 +3,7 @@
 """Unit test driver for get_build_command function
 """
 
+import os
 import unittest
 from unittest.mock import patch
 from doc_builder.build_commands import get_build_command
@@ -16,6 +17,14 @@ from doc_builder.build_commands import get_build_command
 class TestGetBuildCommand(unittest.TestCase):
     """Test the get_build_command function"""
 
+    def setUp(self):
+        """Run this before each test"""
+
+        # Get current user's UID and GID
+        uid = os.getuid()
+        gid = os.getgid()
+        self.uid_gid = "{}:{}".format(uid, gid)
+
     def test_basic(self):
         """Tests basic usage"""
         build_command = get_build_command(build_dir="/path/to/foo",
@@ -24,7 +33,7 @@ class TestGetBuildCommand(unittest.TestCase):
                                           num_make_jobs=4,
                                           docker_name=None,
                                           version="None")
-        expected = ["make", "BUILDDIR=/path/to/foo", "-j", "4", "html"]
+        expected = ["make", "SPHINXOPTS=-W --keep-going", "BUILDDIR=/path/to/foo", "-j", "4", "html"]
         self.assertEqual(expected, build_command)
 
     @patch('os.path.expanduser')
@@ -37,15 +46,23 @@ class TestGetBuildCommand(unittest.TestCase):
                                           num_make_jobs=4,
                                           docker_name='foo',
                                           version="None")
-        expected = ["docker", "run",
-                    "--name", "foo",
-                    "--mount", "type=bind,source=/path/to/username,target=/home/user/mounted_home",
-                    "--workdir", "/home/user/mounted_home/foorepos/foocode/doc",
-                    "-t",
-                    "--rm",
-                    "escomp/base",
-                    "make", "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
-                    "-j", "4", "html"]
+        expected = [
+            "docker", "run",
+            "--name", "foo",
+            "--user", self.uid_gid,
+            "--mount", "type=bind,source=/path/to/username,target=/home/user/mounted_home",
+            "--workdir", "/home/user/mounted_home/foorepos/foocode/doc",
+            "-t",
+            "--rm",
+            "-e", "current_version=None",
+            "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1",
+            "make",
+            "SPHINXOPTS=-W --keep-going",
+            "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
+            "-j", "4",
+            "html"
+        ]
+        print("build_command: +", " ".join(build_command))
         self.assertEqual(expected, build_command)
 
     @patch('os.path.expanduser')
@@ -60,12 +77,16 @@ class TestGetBuildCommand(unittest.TestCase):
                                           version="None")
         expected = ["docker", "run",
                     "--name", "foo",
+                    "--user", self.uid_gid,
                     "--mount", "type=bind,source=/path/to/username,target=/home/user/mounted_home",
                     "--workdir", "/home/user/mounted_home/foorepos/foocode/doc",
                     "-t",
                     "--rm",
-                    "escomp/base",
-                    "make", "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
+                    "-e", "current_version=None",
+                    "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1",
+                    "make",
+                    "SPHINXOPTS=-W --keep-going",
+                    "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
                     "-j", "4", "html"]
         self.assertEqual(expected, build_command)
 
