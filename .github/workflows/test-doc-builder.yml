@@ -78,20 +78,20 @@ jobs:
       - name: Set up conda environment
         uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: doc-builder-python3.6
-          environment-file: test/python3.6_test_conda.yml
+          activate-environment: doc-builder-testing
+          environment-file: test/python_test_conda.yml
           channels: conda-forge
           auto-activate-base: false
 
       - name: Pylint
         run: |
           cd test
-          conda run -n doc-builder-python3.6 make lint
+          conda run -n doc-builder-testing make lint
 
       - name: Unit/system tests
         if: success() || failure()
         run: |
-          conda run -n doc-builder-python3.6 make -C test
+          conda run -n doc-builder-testing make -C test
         # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
 
   # File an issue if any of above jobs failed during a scheduled or manual run
