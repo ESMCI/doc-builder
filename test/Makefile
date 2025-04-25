@@ -63,7 +63,7 @@ lint : FORCE
 
 .PHONY : black
 black : FORCE
-	black --check $(SRC) $(TEST_DIR)/test_*.py
+	black --config $(TEST_DIR)/pyproject.toml --check $(SRC) $(TEST_DIR)/test_*.py
 
 #
 # utilites

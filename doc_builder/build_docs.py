@@ -169,9 +169,7 @@ def setup_for_docker():
     Returns a name that should be used in the docker run command
     """
 
-    docker_name = "build_docs_" + "".join(
-        random.choice(string.ascii_lowercase) for _ in range(8)
-    )
+    docker_name = "build_docs_" + "".join(random.choice(string.ascii_lowercase) for _ in range(8))
 
     # It seems that, if we kill the build_docs process with Ctrl-C, the docker process
     # continues. Handle that by implementing a signal handler. There may be a better /
