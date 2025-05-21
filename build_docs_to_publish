@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+
+"""
+Loop through all versions of the documentation, building each and moving it to a directory for
+publication.
+
+# Adapted from https://www.codingwiththomas.com/blog/my-sphinx-best-practice-for-a-multiversion-documentation-in-different-languages
+# (last visited 2025-05-20)
+"""
+
+import sys
+import os
+import subprocess
+import argparse
+
+# pylint: disable=import-error,no-name-in-module
+from doc_builder.build_docs import (
+    main as build_docs,
+)
+from doc_builder.build_docs_shared_args import main as build_docs_shared_args
+from doc_builder.sys_utils import get_git_head_or_branch, check_permanent_file
+
+# Change to the parent director of doc-builder and add to Python path
+os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
+sys.path.insert(0, os.getcwd())
+
+# Import our definitions of each documentation version.
+# pylint: disable=wrong-import-position
+from source.version_list import (
+    LATEST_REF,
+    VERSION_LIST,
+)
+
+
+# Path to certain important files
+# TODO: Make these cmd-line options
+SOURCE = "source"
+CONF_PY = os.path.join(SOURCE, "conf.py")
+VERSIONS_PY = os.path.join(SOURCE, "version_list.py")
+STATIC_DIR = os.path.join(SOURCE, "_static")
+TEMPLATES_DIR = os.path.join(SOURCE, "_templates")
+
+
+def checkout_and_build(version, args):
+    """
+    Check out docs for a version and build
+    """
+
+    # Get the current branch, or SHA if detached HEAD
+    orig_ref = get_git_head_or_branch()
+
+    # Some files/directories/submodules must stay the same for all builds. We list these in
+    # the permanent_files list.
+    permanent_files = [CONF_PY, VERSIONS_PY, STATIC_DIR, TEMPLATES_DIR, "doc-builder"]
+
+    # Check some things about "permanent" files before checkout
+    for filename in permanent_files:
+        check_permanent_file(filename)
+
+    # Check out the git reference of this version (branch name, tag, or commit SHA)
+    subprocess.check_output("git checkout " + version.ref, shell=True)
+
+    # Check out LATEST_REF version of permanent files
+    for filename in permanent_files:
+        subprocess.check_output(f"git checkout {LATEST_REF} -- {filename}", shell=True)
+
+    # Build the docs for this version
+    build_args = [
+        "-r",
+        args.repo_root,
+        "-v",
+        version.short_name,
+        "--version-display-name",
+        version.display_name,
+        "--versions",
+        "--site-root",
+        args.site_root,
+        "--clean",
+    ]
+    if args.build_with_docker:
+        build_args += ["-d"]
+    print(" ".join(build_args))
+    build_docs(build_args)
+
+    # Go back to original git status.
+    # 1. Get the current ref's version of doc-builder to avoid "would be overwritten by checkout"
+    #    errors.
+    subprocess.check_output("git submodule update --checkout doc-builder", shell=True)
+    # 2. Check out the original git ref (branch or commit SHA)
+    subprocess.check_output("git checkout " + orig_ref, shell=True)
+    # 3. Restore the current version's doc-builder
+    subprocess.check_output("git submodule update --checkout doc-builder", shell=True)
+
+
+def check_version_list():
+    """
+    Check version list for problems
+    """
+    has_default = False
+    for version in VERSION_LIST:
+        # Expect at most one version with landing_version True
+        if version.landing_version:
+            if has_default:
+                raise RuntimeError(
+                    "Expected at most one version with landing_version True"
+                )
+            has_default = True
+
+
+def main():
+
+    # Set up parser
+    parser = argparse.ArgumentParser()
+
+    # Arguments shared with build_docs
+    parser = build_docs_shared_args(parser)
+
+    # Custom arguments for build_docs_to_publish
+    parser.add_argument(
+        "--publish-dir",
+        default="_publish",
+        help="Where the docs should be moved after being built",
+    )
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Check version list for problems
+    check_version_list()
+
+    # Loop over all documentation versions
+    for version in VERSION_LIST:
+        # Build this version
+        checkout_and_build(version, args)
+
+        # Copy this version to the publication directory
+        src = os.path.join(args.repo_root, "versions", version.short_name, "html")
+        if version.landing_version:
+            dst = args.publish_dir
+        else:
+            dst = os.path.join(args.publish_dir, version.short_name)
+        os.makedirs(dst)
+        subprocess.check_output(f"mv '{src}'/* '{dst}'/", shell=True)
+
+
+if __name__ == "__main__":
+    main()

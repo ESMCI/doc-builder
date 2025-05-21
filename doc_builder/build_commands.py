@@ -65,6 +65,7 @@ command-line argument '--doc-version {version}'"""
 
 
 def get_build_command(
+    *,
     build_dir,
     run_from_dir,
     build_target,

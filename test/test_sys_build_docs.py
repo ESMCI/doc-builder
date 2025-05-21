@@ -7,6 +7,8 @@ import unittest
 import tempfile
 import shutil
 import os
+
+# pylint: disable=import-error,no-name-in-module
 from test.test_utils.git_helpers import (
     make_git_repo,
     add_git_commit,

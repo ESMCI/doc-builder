@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit test driver for get_build_command function
-"""
+"""Unit test driver for get_build_command function"""
 
 import os
 import unittest

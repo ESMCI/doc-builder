@@ -8,12 +8,30 @@ import os
 import random
 import string
 import sys
+from urllib.parse import urlparse
 import signal
+
+# pylint: disable=import-error,no-name-in-module
 from doc_builder.build_commands import (
     get_build_dir,
     get_build_command,
     DEFAULT_DOCKER_IMAGE,
 )
+from doc_builder.build_docs_shared_args import bd_dir_group, bd_parser
+
+
+def is_web_url(url_string):
+    """
+    Checks if a string is a valid web URL.
+
+    Args:
+        url_string: The string to check.
+
+    Returns:
+        True if the string is a valid web URL, False otherwise.
+    """
+    result = urlparse(url_string)
+    return all([result.scheme, result.netloc])
 
 
 def commandline_options(cmdline_args=None):
@@ -73,14 +91,11 @@ based on the version indicated by the current branch, is:
         help="Full path to the directory in which the doc build should go.",
     )
 
-    dir_group.add_argument(
-        "-r",
-        "--repo-root",
-        default=None,
-        help="Root directory of the repository holding documentation builds.\n"
-        "(If there are other path elements between the true repo root and\n"
-        "the 'versions' directory, those should be included in this path.)",
-    )
+    # Add argument(s) to dir_group that are also in build_docs_to_publish's parser
+    dir_group = bd_dir_group(dir_group)
+
+    # Add argument(s) to parser that are also in build_docs_to_publish's parser
+    parser = bd_parser(parser)
 
     parser.add_argument(
         "-v",
@@ -95,24 +110,13 @@ based on the version indicated by the current branch, is:
     )
 
     parser.add_argument(
-        "-c", "--clean", action="store_true", help="Before building, run 'make clean'."
+        "--version-display-name",
+        default=None,
+        help="Version name for display in dropdown menu. If absent, uses -v/--version.",
     )
 
     parser.add_argument(
-        "-d",
-        "--build-with-docker",
-        action="store_true",
-        help="Use a Docker container to build the documentation,\n"
-        "rather than relying on locally-installed versions of Sphinx, etc.\n"
-        "This assumes that Docker is installed and running on your system.\n"
-        "\n"
-        "NOTE: This mounts your home directory in the Docker image.\n"
-        "Therefore, both the current directory (containing the Makefile for\n"
-        "building the documentation) and the documentation build directory\n"
-        "must reside somewhere within your home directory."
-        "\n"
-        f"Default image: {DEFAULT_DOCKER_IMAGE}\n"
-        "This can be changed with -i/--docker-image.",
+        "-c", "--clean", action="store_true", help="Before building, run 'make clean'."
     )
 
     parser.add_argument(
@@ -137,6 +141,12 @@ based on the version indicated by the current branch, is:
     )
 
     parser.add_argument(
+        "--versions",
+        action="store_true",
+        help="Build multiple versions of the docs, with drop-down switcher menu.",
+    )
+
+    parser.add_argument(
         "-w",
         "--warnings-as-warnings",
         action="store_true",
@@ -144,6 +154,18 @@ based on the version indicated by the current branch, is:
     )
 
     options = parser.parse_args(cmdline_args)
+    
+    print(f"options: {options}")
+
+    if options.versions:
+        if not options.site_root:
+            raise RuntimeError(
+                "--site-root must be provided when --versions is enabled"
+            )
+        if not is_web_url(options.site_root) and not os.path.isabs(options.site_root):
+            raise RuntimeError(
+                f"--site-root is neither a web URL nor an absolute path: '{options.site_root}'"
+            )
 
     if options.docker_image:
         options.docker_image = options.docker_image.lower()
@@ -154,12 +176,53 @@ based on the version indicated by the current branch, is:
     return options
 
 
-def run_build_command(build_command, version):
+def setup_env_var(build_command, env, env_var, value, docker):
+    """
+    Set up an environment variable, depending on whether using Docker or not
+    """
+    if docker:
+        # Need to pass to Docker via the build command
+        build_command.insert(-3, "-e")
+        build_command.insert(-3, f"{env_var}={value}")
+    else:
+        env[env_var] = value
+    return build_command, env
+
+
+def run_build_command(build_command, version, options):
     """Echo and then run the given build command"""
-    build_command_str = " ".join(build_command)
-    print(build_command_str)
     env = os.environ.copy()
-    env["current_version"] = version
+
+    # Set version display name (in drop-down menu)
+    if options.version_display_name:
+        value = options.version_display_name
+    else:
+        value = version
+    build_command, env = setup_env_var(
+        build_command, env, "version_display_name", value, options.build_with_docker
+    )
+
+    # Things to do/set based on whether including version dropdown
+    if options.versions:
+        version_dropdown = "True"
+        build_command, env = setup_env_var(
+            build_command,
+            env,
+            "pages_root",
+            options.site_root,
+            options.build_with_docker,
+        )
+    else:
+        version_dropdown = ""
+    build_command, env = setup_env_var(
+        build_command,
+        env,
+        "version_dropdown",
+        version_dropdown,
+        options.build_with_docker,
+    )
+
+    print(" ".join(build_command))
     subprocess.check_call(build_command, env=env)
 
 
@@ -169,7 +232,9 @@ def setup_for_docker():
     Returns a name that should be used in the docker run command
     """
 
-    docker_name = "build_docs_" + "".join(random.choice(string.ascii_lowercase) for _ in range(8))
+    docker_name = "build_docs_" + "".join(
+        random.choice(string.ascii_lowercase) for _ in range(8)
+    )
 
     # It seems that, if we kill the build_docs process with Ctrl-C, the docker process
     # continues. Handle that by implementing a signal handler. There may be a better /
@@ -227,7 +292,9 @@ def main(cmdline_args=None):
                 docker_name=docker_name,
                 docker_image=opts.docker_image,
             )
-            run_build_command(build_command=clean_command, version=version)
+            run_build_command(
+                build_command=clean_command, version=version, options=opts
+            )
 
         build_command = get_build_command(
             build_dir=build_dir,
@@ -239,4 +306,4 @@ def main(cmdline_args=None):
             docker_image=opts.docker_image,
             warnings_as_warnings=opts.warnings_as_warnings,
         )
-        run_build_command(build_command=build_command, version=version)
+        run_build_command(build_command=build_command, version=version, options=opts)
