@@ -43,10 +43,13 @@ extensions = ['sphinx.ext.intersphinx',
     ]
 
 # Add any paths that contain templates here, relative to this directory.
-if os.environ["templates_path"]:
+if os.environ.get("templates_path"):
     templates_path = [os.environ["templates_path"]]
     if not all(os.path.isdir(x) for x in templates_path):
         raise RuntimeError(f"Some member of templates_path does not exist: {templates_path}")
+else:
+    # Fallback: Assume next to conf.py
+    templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -104,7 +107,11 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = [os.environ["html_static_path"]]
+if os.environ.get("html_static_path"):
+    html_static_path = [os.environ.get("html_static_path")]
+else:
+    # Fallback: Assume next to conf.py
+    html_static_path = ["_static"]
 
 
 # -- Options for HTMLHelp output ------------------------------------------
