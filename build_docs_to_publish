@@ -75,7 +75,7 @@ def checkout_and_build(version, args):
         args.site_root,
         "--clean",
     ]
-    if args.build_with_docker:
+    if args.build_in_container:
         build_args += ["-d"]
     if args.conf_py_path:
         build_args += ["--conf-py-path", args.conf_py_path]
