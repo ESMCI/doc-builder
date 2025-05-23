@@ -20,9 +20,7 @@ def check_permanent_file(filename):
     try:
         subprocess.check_output(cmd, shell=True)
     except subprocess.CalledProcessError as e:
-        subprocess.check_output(
-            "git reset", shell=True
-        )  # Unstage files staged by `git add`
+        subprocess.check_output("git reset", shell=True)  # Unstage files staged by `git add`
         msg = f"Important file/submodule may contain uncommitted changes: '{filename}'"
         raise RuntimeError(msg) from e
 
@@ -70,9 +68,7 @@ def git_current_branch():
         try:
             # Suppress stderr because we don't want to clutter output with
             # git's message, e.g., if we're not in a git repository.
-            branch_name = subprocess.check_output(
-                cmd, stderr=devnull, universal_newlines=True
-            )
+            branch_name = subprocess.check_output(cmd, stderr=devnull, universal_newlines=True)
         except subprocess.CalledProcessError:
             branch_found = False
             branch_name = ""

@@ -105,14 +105,11 @@ def check_version_list():
         # Expect at most one version with landing_version True
         if version.landing_version:
             if has_default:
-                raise RuntimeError(
-                    "Expected at most one version with landing_version True"
-                )
+                raise RuntimeError("Expected at most one version with landing_version True")
             has_default = True
 
 
 def main():
-
     # Set up parser
     parser = argparse.ArgumentParser()
 

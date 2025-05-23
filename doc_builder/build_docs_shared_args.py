@@ -4,6 +4,7 @@ group.
 """
 
 import os
+
 # pylint: disable=import-error,no-name-in-module
 from .build_commands import DEFAULT_DOCKER_IMAGE
 

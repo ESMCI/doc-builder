@@ -17,7 +17,6 @@ class DocsVersion:
         ref,
         landing_version=False,
     ):
-
         # The name of this version in file/URL paths
         self.short_name = short_name
 

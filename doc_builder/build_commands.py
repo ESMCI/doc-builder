@@ -107,9 +107,7 @@ def get_build_command(
     # check this assumption below).
     docker_mountpoint = os.path.expanduser("~")
 
-    errmsg_if_not_under_mountpoint = (
-        "build_docs must be run from somewhere in your home directory"
-    )
+    errmsg_if_not_under_mountpoint = "build_docs must be run from somewhere in your home directory"
     docker_workdir = _docker_path_from_local_path(
         local_path=run_from_dir,
         docker_mountpoint=docker_mountpoint,
@@ -158,9 +156,7 @@ def get_build_command(
     return docker_command
 
 
-def _get_make_command(
-    build_dir, build_target, num_make_jobs, warnings_as_warnings, conf_py_path
-):
+def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnings, conf_py_path):
     """Return the make command to run (as a list)
 
     Args:
@@ -182,9 +178,7 @@ def _get_make_command(
     return ["make", sphinxopts, builddir_arg, "-j", str(num_make_jobs), build_target]
 
 
-def _docker_path_from_local_path(
-    local_path, docker_mountpoint, errmsg_if_not_under_mountpoint
-):
+def _docker_path_from_local_path(local_path, docker_mountpoint, errmsg_if_not_under_mountpoint):
     """Given a path on the local file system, return the equivalent path in Docker space
 
     Args:

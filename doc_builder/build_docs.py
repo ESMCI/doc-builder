@@ -154,14 +154,12 @@ based on the version indicated by the current branch, is:
     )
 
     options = parser.parse_args(cmdline_args)
-    
+
     print(f"options: {options}")
 
     if options.versions:
         if not options.site_root:
-            raise RuntimeError(
-                "--site-root must be provided when --versions is enabled"
-            )
+            raise RuntimeError("--site-root must be provided when --versions is enabled")
         if not is_web_url(options.site_root) and not os.path.isabs(options.site_root):
             raise RuntimeError(
                 f"--site-root is neither a web URL nor an absolute path: '{options.site_root}'"
@@ -240,9 +238,7 @@ def setup_for_docker():
     Returns a name that should be used in the docker run command
     """
 
-    docker_name = "build_docs_" + "".join(
-        random.choice(string.ascii_lowercase) for _ in range(8)
-    )
+    docker_name = "build_docs_" + "".join(random.choice(string.ascii_lowercase) for _ in range(8))
 
     # It seems that, if we kill the build_docs process with Ctrl-C, the docker process
     # continues. Handle that by implementing a signal handler. There may be a better /
@@ -300,9 +296,7 @@ def main(cmdline_args=None):
                 docker_name=docker_name,
                 docker_image=opts.docker_image,
             )
-            run_build_command(
-                build_command=clean_command, version=version, options=opts
-            )
+            run_build_command(build_command=clean_command, version=version, options=opts)
 
         build_command = get_build_command(
             build_dir=build_dir,
