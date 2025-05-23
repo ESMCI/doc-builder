@@ -4,8 +4,9 @@
 Loop through all versions of the documentation, building each and moving it to a directory for
 publication.
 
-# Adapted from https://www.codingwiththomas.com/blog/my-sphinx-best-practice-for-a-multiversion-documentation-in-different-languages
-# (last visited 2025-05-20)
+Adapted from https://www.codingwiththomas.com/blog/my-sphinx-best-practice-for-a-multiversion-
+documentation-in-different-languages
+(last visited 2025-05-20)
 """
 
 import sys
@@ -33,7 +34,6 @@ from version_list import (
 
 
 # Path to certain important files
-# TODO: Make these cmd-line options
 SOURCE = "source"
 VERSIONS_PY = os.path.join("version_list.py")
 MAKEFILE = "Makefile"
@@ -110,6 +110,10 @@ def check_version_list():
 
 
 def main():
+    """
+    Loop through all versions of the documentation, building each and moving it to a directory for
+    publication.
+    """
     # Set up parser
     parser = argparse.ArgumentParser()
 

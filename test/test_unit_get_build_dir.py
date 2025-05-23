@@ -12,9 +12,11 @@ except ImportError:
     # For python3
     from unittest import mock
 import os
+
+# pylint: disable=import-error,no-name-in-module
 from test.test_utils.sys_utils_fake import (
     make_fake_isdir,
-)  # pylint: disable=import-error,no-name-in-module
+)
 from doc_builder.build_commands import get_build_dir
 
 

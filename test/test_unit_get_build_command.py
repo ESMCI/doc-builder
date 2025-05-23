@@ -5,7 +5,7 @@
 import os
 import unittest
 from unittest.mock import patch
-from doc_builder.build_commands import get_build_command
+from doc_builder.build_commands import get_build_command  # pylint: disable=import-error
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names

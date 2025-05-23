@@ -19,10 +19,10 @@ def check_permanent_file(filename):
     cmd = f"git add . && git diff --quiet {filename} && git diff --cached --quiet {filename}"
     try:
         subprocess.check_output(cmd, shell=True)
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as exception:
         subprocess.check_output("git reset", shell=True)  # Unstage files staged by `git add`
         msg = f"Important file/submodule may contain uncommitted changes: '{filename}'"
-        raise RuntimeError(msg) from e
+        raise RuntimeError(msg) from exception
 
 
 def get_git_head_or_branch():

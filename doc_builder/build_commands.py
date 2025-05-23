@@ -4,7 +4,7 @@ Functions with the main logic needed to build the command to build the docs
 
 import os
 import pathlib
-from doc_builder import sys_utils
+from doc_builder import sys_utils  # pylint: disable=import-error
 
 DEFAULT_DOCKER_IMAGE = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 
@@ -75,8 +75,6 @@ def get_build_command(
     warnings_as_warnings=False,
     docker_image=DEFAULT_DOCKER_IMAGE,
     conf_py_path=None,
-    static_path=None,
-    templates_path=None,
 ):
     # pylint: disable=too-many-arguments,too-many-locals
     """Return a string giving the build command.

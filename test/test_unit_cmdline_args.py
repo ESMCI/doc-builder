@@ -5,7 +5,7 @@
 import unittest
 
 import os
-from doc_builder.build_docs import is_web_url, commandline_options
+from doc_builder.build_docs import is_web_url, commandline_options  # pylint: disable=import-error
 
 
 class TestCmdlineArgs(unittest.TestCase):
