@@ -102,9 +102,10 @@ class TestGetBuildCommand(unittest.TestCase):
             docker_name="foo",
             version="None",
             conf_py_path=conf_py_path,
+            container_cli_tool="abc123",
         )
         expected = [
-            "docker",
+            "abc123",
             "run",
             "--name",
             "foo",
@@ -140,9 +141,10 @@ class TestGetBuildCommand(unittest.TestCase):
             num_make_jobs=4,
             docker_name="foo",
             version="None",
+            container_cli_tool="abc123",
         )
         expected = [
-            "docker",
+            "abc123",
             "run",
             "--name",
             "foo",

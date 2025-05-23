@@ -4,12 +4,16 @@ Functions with the main logic needed to build the command to build the docs
 
 import os
 import pathlib
+import shutil
 from doc_builder import sys_utils  # pylint: disable=import-error
 
 DEFAULT_DOCKER_IMAGE = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 
 # The path in Docker's filesystem where the user's home directory is mounted
 _DOCKER_HOME = "/home/user/mounted_home"
+
+# CLI tools we can try to use to run our container, in decreasing order of preference
+COMPATIBLE_CLI_TOOLS = ["podman", "docker"]
 
 
 def get_build_dir(build_dir=None, repo_root=None, version=None):
@@ -64,6 +68,17 @@ command-line argument '--doc-version {version}'"""
     return build_dir, version
 
 
+def get_container_cli_tool():
+    """
+    Loop through our list of compatible CLI tools for running our container, checking whether user
+    has them installed. Error if none found.
+    """
+    for tool in COMPATIBLE_CLI_TOOLS:
+        if shutil.which(tool):
+            return tool
+    raise RuntimeError(f"No compatible container software found: {', '.join(COMPATIBLE_CLI_TOOLS)}")
+
+
 def get_build_command(
     *,
     build_dir,
@@ -75,6 +90,7 @@ def get_build_command(
     warnings_as_warnings=False,
     docker_image=DEFAULT_DOCKER_IMAGE,
     conf_py_path=None,
+    container_cli_tool=None,
 ):
     # pylint: disable=too-many-arguments,too-many-locals
     """Return a string giving the build command.
@@ -134,8 +150,12 @@ def get_build_command(
         conf_py_path=conf_py_path,
     )
 
+    # Get name of command to start container, if not provided
+    if container_cli_tool is None:
+        container_cli_tool = get_container_cli_tool()
+
     docker_command = [
-        "docker",
+        container_cli_tool,
         "run",
         "--name",
         docker_name,

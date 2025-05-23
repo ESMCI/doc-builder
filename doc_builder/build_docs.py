@@ -15,6 +15,7 @@ import signal
 from doc_builder.build_commands import (
     get_build_dir,
     get_build_command,
+    get_container_cli_tool,
     DEFAULT_DOCKER_IMAGE,
 )
 from doc_builder.build_docs_shared_args import bd_dir_group, bd_parser
@@ -246,7 +247,7 @@ def setup_for_docker():
     def sigint_kill_docker(signum, frame):
         """Signal handler: kill docker process before exiting"""
         # pylint: disable=unused-argument
-        docker_kill_cmd = ["docker", "kill", docker_name]
+        docker_kill_cmd = [get_container_cli_tool(), "kill", docker_name]
         subprocess.check_call(docker_kill_cmd)
         sys.exit(1)
 
