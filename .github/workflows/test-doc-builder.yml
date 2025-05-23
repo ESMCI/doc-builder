@@ -37,8 +37,8 @@ jobs:
       - name: Unit/system tests
         if: success() || failure()
         run: |
-          make -C test
-        # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
+          cd test
+          make test
 
   test-python-latest:
     name: Test in Python ${{ matrix.python-version }}
@@ -63,8 +63,8 @@ jobs:
       - name: Unit/system tests
         if: success() || failure()
         run: |
-          make -C test
-        # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
+          cd test
+          make test
 
   lint-and-test-conda:
     name: Lint and test in Conda env
@@ -97,8 +97,8 @@ jobs:
       - name: Unit/system tests
         if: success() || failure()
         run: |
-          conda run -n doc-builder-testing make -C test
-        # -C test is needed because, if you just cd test/ beforehand, git commands in tests fail with an error
+          cd test
+          conda run -n doc-builder-testing make test
 
   # File an issue if any of above jobs failed during a scheduled or manual run
   file-issue-on-failure:
