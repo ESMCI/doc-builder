@@ -38,6 +38,8 @@ jobs:
         if: success() || failure()
         run: |
           cd test
+          git config user.name "CTSM Developer"
+          git config user.email "ctsm-developer@institute.edu"
           make test
 
   test-python-latest:
@@ -61,9 +63,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Unit/system tests
-        if: success() || failure()
         run: |
           cd test
+          git config --global user.name "CTSM Developer"
+          git config --global user.email "ctsm-developer@institute.edu"
           make test
 
   lint-and-test-conda:
@@ -98,6 +101,8 @@ jobs:
         if: success() || failure()
         run: |
           cd test
+          git config user.name "CTSM Developer"
+          git config user.email "ctsm-developer@institute.edu"
           conda run -n doc-builder-testing make test
 
   # File an issue if any of above jobs failed during a scheduled or manual run
