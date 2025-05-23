@@ -74,6 +74,9 @@ def get_build_command(
     docker_name=None,
     warnings_as_warnings=False,
     docker_image=DEFAULT_DOCKER_IMAGE,
+    conf_py_path=None,
+    static_path=None,
+    templates_path=None,
 ):
     # pylint: disable=too-many-arguments,too-many-locals
     """Return a string giving the build command.
@@ -94,6 +97,7 @@ def get_build_command(
             build_target=build_target,
             num_make_jobs=num_make_jobs,
             warnings_as_warnings=warnings_as_warnings,
+            conf_py_path=conf_py_path,
         )
 
     # But if we're using Docker, we have more work to do to create the command....
@@ -103,7 +107,9 @@ def get_build_command(
     # check this assumption below).
     docker_mountpoint = os.path.expanduser("~")
 
-    errmsg_if_not_under_mountpoint = "build_docs must be run from somewhere in your home directory"
+    errmsg_if_not_under_mountpoint = (
+        "build_docs must be run from somewhere in your home directory"
+    )
     docker_workdir = _docker_path_from_local_path(
         local_path=run_from_dir,
         docker_mountpoint=docker_mountpoint,
@@ -129,6 +135,7 @@ def get_build_command(
         build_target=build_target,
         num_make_jobs=num_make_jobs,
         warnings_as_warnings=warnings_as_warnings,
+        conf_py_path=conf_py_path,
     )
 
     docker_command = [
@@ -151,7 +158,9 @@ def get_build_command(
     return docker_command
 
 
-def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnings):
+def _get_make_command(
+    build_dir, build_target, num_make_jobs, warnings_as_warnings, conf_py_path
+):
     """Return the make command to run (as a list)
 
     Args:
@@ -162,11 +171,20 @@ def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnin
     builddir_arg = f"BUILDDIR={build_dir}"
     sphinxopts = "SPHINXOPTS="
     if not warnings_as_warnings:
-        sphinxopts += "-W --keep-going"
+        sphinxopts += "-W --keep-going "
+    if conf_py_path:
+        if not os.path.exists(conf_py_path):
+            raise FileNotFoundError(f"--conf-py-path not found: '{conf_py_path}'")
+        if not os.path.isdir(conf_py_path):
+            conf_py_path = os.path.dirname(conf_py_path)
+        sphinxopts += f"-c '{conf_py_path}' "
+    sphinxopts = sphinxopts.rstrip()
     return ["make", sphinxopts, builddir_arg, "-j", str(num_make_jobs), build_target]
 
 
-def _docker_path_from_local_path(local_path, docker_mountpoint, errmsg_if_not_under_mountpoint):
+def _docker_path_from_local_path(
+    local_path, docker_mountpoint, errmsg_if_not_under_mountpoint
+):
     """Given a path on the local file system, return the equivalent path in Docker space
 
     Args:

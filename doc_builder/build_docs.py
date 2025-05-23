@@ -202,6 +202,14 @@ def run_build_command(build_command, version, options):
         build_command, env, "version_display_name", value, options.build_with_docker
     )
 
+    # Set paths to certain directories
+    build_command, env = setup_env_var(
+        build_command, env, "html_static_path", options.static_path, options.build_with_docker
+    )
+    build_command, env = setup_env_var(
+        build_command, env, "templates_path", options.templates_path, options.build_with_docker
+    )
+
     # Things to do/set based on whether including version dropdown
     if options.versions:
         version_dropdown = "True"
@@ -305,5 +313,6 @@ def main(cmdline_args=None):
             docker_name=docker_name,
             docker_image=opts.docker_image,
             warnings_as_warnings=opts.warnings_as_warnings,
+            conf_py_path=opts.conf_py_path,
         )
         run_build_command(build_command=build_command, version=version, options=opts)

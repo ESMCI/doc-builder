@@ -45,10 +45,55 @@ class TestGetBuildCommand(unittest.TestCase):
         ]
         self.assertEqual(expected, build_command)
 
+    def test_custom_conf_py_path(self):
+        """Tests usage with --conf-py-path as file"""
+        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
+        build_command = get_build_command(
+            build_dir="/path/to/foo",
+            run_from_dir="/irrelevant/path",
+            build_target="html",
+            num_make_jobs=4,
+            docker_name=None,
+            version="None",
+            conf_py_path=conf_py_path,
+        )
+        expected = [
+            "make",
+            f"SPHINXOPTS=-W --keep-going -c '{os.path.dirname(conf_py_path)}'",
+            "BUILDDIR=/path/to/foo",
+            "-j",
+            "4",
+            "html",
+        ]
+        self.assertEqual(expected, build_command)
+
+    def test_custom_conf_py_path_dir(self):
+        """Tests usage with --conf-py-path as directory"""
+        conf_py_path = os.path.dirname(__file__)
+        build_command = get_build_command(
+            build_dir="/path/to/foo",
+            run_from_dir="/irrelevant/path",
+            build_target="html",
+            num_make_jobs=4,
+            docker_name=None,
+            version="None",
+            conf_py_path=conf_py_path,
+        )
+        expected = [
+            "make",
+            f"SPHINXOPTS=-W --keep-going -c '{conf_py_path}'",
+            "BUILDDIR=/path/to/foo",
+            "-j",
+            "4",
+            "html",
+        ]
+        self.assertEqual(expected, build_command)
+
     @patch("os.path.expanduser")
     def test_docker(self, mock_expanduser):
         """Tests usage with use_docker=True"""
         mock_expanduser.return_value = "/path/to/username"
+        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/username/foorepos/foodocs/versions/main",
             run_from_dir="/path/to/username/foorepos/foocode/doc",
@@ -56,6 +101,7 @@ class TestGetBuildCommand(unittest.TestCase):
             num_make_jobs=4,
             docker_name="foo",
             version="None",
+            conf_py_path=conf_py_path,
         )
         expected = [
             "docker",
@@ -74,7 +120,7 @@ class TestGetBuildCommand(unittest.TestCase):
             "current_version=None",
             "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1",
             "make",
-            "SPHINXOPTS=-W --keep-going",
+            f"SPHINXOPTS=-W --keep-going -c '{os.path.dirname(conf_py_path)}'",
             "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
             "-j",
             "4",

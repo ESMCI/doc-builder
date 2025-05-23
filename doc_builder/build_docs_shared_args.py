@@ -3,6 +3,7 @@ build_docs and build_docs_to_publish share some args. This module adds them to a
 group.
 """
 
+import os
 # pylint: disable=import-error,no-name-in-module
 from .build_commands import DEFAULT_DOCKER_IMAGE
 
@@ -33,6 +34,21 @@ def bd_parser(parser, site_root_required=False):
         "\n"
         f"Default image: {DEFAULT_DOCKER_IMAGE}\n"
         "This can be changed with -i/--docker-image.",
+    )
+    parser.add_argument(
+        "--conf-py-path",
+        help="Path to conf.py",
+        default=None,
+    )
+    parser.add_argument(
+        "--static-path",
+        help="Path to _static/. If relative, must be relative to conf.py.",
+        default="_static",
+    )
+    parser.add_argument(
+        "--templates-path",
+        help="Path to _templates/. If relative, must be relative to conf.py.",
+        default="_templates",
     )
     return parser
 
