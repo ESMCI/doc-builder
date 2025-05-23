@@ -8,7 +8,7 @@ This should be run from the directory that contains the Makefile for
 building the documentation.
 """
 
-from doc_builder import build_docs
+from doc_builder import build_docs  # pylint: disable=import-error
 
 if __name__ == "__main__":
     build_docs.main()

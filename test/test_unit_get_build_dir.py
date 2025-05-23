@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit test driver for get_build_dir function
-"""
+"""Unit test driver for get_build_dir function"""
 
 import shutil
 import unittest
@@ -13,7 +12,11 @@ except ImportError:
     # For python3
     from unittest import mock
 import os
-from test.test_utils.sys_utils_fake import make_fake_isdir
+
+# pylint: disable=import-error,no-name-in-module
+from test.test_utils.sys_utils_fake import (
+    make_fake_isdir,
+)
 from doc_builder.build_commands import get_build_dir
 
 
