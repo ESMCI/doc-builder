@@ -4,7 +4,7 @@ group.
 """
 
 # pylint: disable=import-error,no-name-in-module
-from .build_commands import DEFAULT_DOCKER_IMAGE
+from .build_commands import DEFAULT_IMAGE
 
 
 def bd_parser(parser, site_root_required=False):
@@ -20,19 +20,19 @@ def bd_parser(parser, site_root_required=False):
     )
     parser.add_argument(
         "-d",
-        "--build-with-docker",
+        "--build-in-container",
         action="store_true",
-        help="Use a Docker container to build the documentation,\n"
+        help="Use a container to build the documentation,\n"
         "rather than relying on locally-installed versions of Sphinx, etc.\n"
-        "This assumes that Docker is installed and running on your system.\n"
+        "This checks that a compatible container tool is installed and running on your system.\n"
         "\n"
-        "NOTE: This mounts your home directory in the Docker image.\n"
+        "NOTE: This mounts your home directory in the container.\n"
         "Therefore, both the current directory (containing the Makefile for\n"
         "building the documentation) and the documentation build directory\n"
         "must reside somewhere within your home directory."
         "\n"
-        f"Default image: {DEFAULT_DOCKER_IMAGE}\n"
-        "This can be changed with -i/--docker-image.",
+        f"Default image: {DEFAULT_IMAGE}\n"
+        "This can be changed with -i/--container-image.",
     )
     parser.add_argument(
         "--conf-py-path",

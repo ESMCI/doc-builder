@@ -2,7 +2,7 @@ This tool wraps the build command to build sphinx-based documentation.
 
 This tool assists with creating the correct documentation build commands
 in cases including:
-- Building the documentation from a Docker container
+- Building the documentation from a container
 - Building versioned documentation, where the documentation builds land
   in subdirectories named based on the source branch
 
@@ -16,7 +16,7 @@ Simple usage is:
 
     Common additional flags are:
     -c: Before building, run 'make clean'
-    -d: Use a Docker container to build the documentation
+    -d: Use a container to build the documentation
 
 Usage for automatically determining the subdirectory in which to build,
 based on the version indicated by the current branch, is:

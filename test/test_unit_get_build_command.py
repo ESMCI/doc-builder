@@ -32,7 +32,7 @@ class TestGetBuildCommand(unittest.TestCase):
             run_from_dir="/irrelevant/path",
             build_target="html",
             num_make_jobs=4,
-            docker_name=None,
+            container_name=None,
             version="None",
         )
         expected = [
@@ -53,7 +53,7 @@ class TestGetBuildCommand(unittest.TestCase):
             run_from_dir="/irrelevant/path",
             build_target="html",
             num_make_jobs=4,
-            docker_name=None,
+            container_name=None,
             version="None",
             conf_py_path=conf_py_path,
         )
@@ -75,7 +75,7 @@ class TestGetBuildCommand(unittest.TestCase):
             run_from_dir="/irrelevant/path",
             build_target="html",
             num_make_jobs=4,
-            docker_name=None,
+            container_name=None,
             version="None",
             conf_py_path=conf_py_path,
         )
@@ -90,8 +90,8 @@ class TestGetBuildCommand(unittest.TestCase):
         self.assertEqual(expected, build_command)
 
     @patch("os.path.expanduser")
-    def test_docker(self, mock_expanduser):
-        """Tests usage with use_docker=True"""
+    def test_container(self, mock_expanduser):
+        """Tests usage with container"""
         mock_expanduser.return_value = "/path/to/username"
         conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
@@ -99,12 +99,13 @@ class TestGetBuildCommand(unittest.TestCase):
             run_from_dir="/path/to/username/foorepos/foocode/doc",
             build_target="html",
             num_make_jobs=4,
-            docker_name="foo",
+            container_name="foo",
             version="None",
             conf_py_path=conf_py_path,
+            container_cli_tool="abc123",
         )
         expected = [
-            "docker",
+            "abc123",
             "run",
             "--name",
             "foo",
@@ -130,19 +131,20 @@ class TestGetBuildCommand(unittest.TestCase):
         self.assertEqual(expected, build_command)
 
     @patch("os.path.expanduser")
-    def test_docker_relpath(self, mock_expanduser):
-        """Tests usage with use_docker=True, with a relative path to build_dir"""
+    def test_container_relpath(self, mock_expanduser):
+        """Tests usage with container, with a relative path to build_dir"""
         mock_expanduser.return_value = "/path/to/username"
         build_command = get_build_command(
             build_dir="../../foodocs/versions/main",
             run_from_dir="/path/to/username/foorepos/foocode/doc",
             build_target="html",
             num_make_jobs=4,
-            docker_name="foo",
+            container_name="foo",
             version="None",
+            container_cli_tool="abc123",
         )
         expected = [
-            "docker",
+            "abc123",
             "run",
             "--name",
             "foo",
@@ -167,7 +169,7 @@ class TestGetBuildCommand(unittest.TestCase):
         self.assertEqual(expected, build_command)
 
     @patch("os.path.expanduser")
-    def test_docker_builddir_not_in_home(self, mock_expanduser):
+    def test_container_builddir_not_in_home(self, mock_expanduser):
         """If build_dir is not in the user's home directory, should raise an exception"""
         mock_expanduser.return_value = "/path/to/username"
         with self.assertRaisesRegex(
@@ -178,12 +180,12 @@ class TestGetBuildCommand(unittest.TestCase):
                 run_from_dir="/path/to/username/foorepos/foocode/doc",
                 build_target="html",
                 num_make_jobs=4,
-                docker_name="foo",
+                container_name="foo",
                 version="None",
             )
 
     @patch("os.path.expanduser")
-    def test_docker_runfromdir_not_in_home(self, mock_expanduser):
+    def test_container_runfromdir_not_in_home(self, mock_expanduser):
         """If run_from_dir is not in the user's home directory, should raise an exception"""
         mock_expanduser.return_value = "/path/to/username"
         with self.assertRaisesRegex(
@@ -195,7 +197,7 @@ class TestGetBuildCommand(unittest.TestCase):
                 run_from_dir="/path/to/other/foorepos/foocode/doc",
                 build_target="html",
                 num_make_jobs=4,
-                docker_name="foo",
+                container_name="foo",
                 version="None",
             )
 

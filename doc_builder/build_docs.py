@@ -15,7 +15,8 @@ import signal
 from doc_builder.build_commands import (
     get_build_dir,
     get_build_command,
-    DEFAULT_DOCKER_IMAGE,
+    get_container_cli_tool,
+    DEFAULT_IMAGE,
 )
 from doc_builder.build_docs_shared_args import bd_dir_group, bd_parser
 
@@ -46,7 +47,7 @@ This tool wraps the build command to build sphinx-based documentation.
 
 This tool assists with creating the correct documentation build commands
 in cases including:
-- Building the documentation from a Docker container
+- Building the documentation from a container
 - Building versioned documentation, where the documentation builds land
   in subdirectories named based on the source branch
 
@@ -60,7 +61,7 @@ Simple usage is:
 
     Common additional flags are:
     -c: Before building, run 'make clean'
-    -d: Use the {DEFAULT_DOCKER_IMAGE} Docker container to build the documentation
+    -d: Use the {DEFAULT_IMAGE} version of the container to build the documentation
 
 Usage for automatically determining the subdirectory in which to build,
 based on the version indicated by the current branch, is:
@@ -121,10 +122,9 @@ based on the version indicated by the current branch, is:
 
     parser.add_argument(
         "-i",
-        "--docker-image",
-        "--docker-container",
+        "--container-image",
         default=None,
-        help="Docker container to use. Implies -d.",
+        help="Container image version to use. Implies -d.",
     )
 
     parser.add_argument(
@@ -165,21 +165,21 @@ based on the version indicated by the current branch, is:
                 f"--site-root is neither a web URL nor an absolute path: '{options.site_root}'"
             )
 
-    if options.docker_image:
-        options.docker_image = options.docker_image.lower()
-        options.build_with_docker = True
-    elif options.build_with_docker:
-        options.docker_image = DEFAULT_DOCKER_IMAGE
+    if options.container_image:
+        options.container_image = options.container_image.lower()
+        options.build_in_container = True
+    elif options.build_in_container:
+        options.container_image = DEFAULT_IMAGE
 
     return options
 
 
-def setup_env_var(build_command, env, env_var, value, docker):
+def setup_env_var(build_command, env, env_var, value, container):
     """
-    Set up an environment variable, depending on whether using Docker or not
+    Set up an environment variable, depending on whether using container or not
     """
-    if docker:
-        # Need to pass to Docker via the build command
+    if container:
+        # Need to pass to container via the build command
         build_command.insert(-3, "-e")
         build_command.insert(-3, f"{env_var}={value}")
     else:
@@ -197,15 +197,15 @@ def run_build_command(build_command, version, options):
     else:
         value = version
     build_command, env = setup_env_var(
-        build_command, env, "version_display_name", value, options.build_with_docker
+        build_command, env, "version_display_name", value, options.build_in_container
     )
 
     # Set paths to certain directories
     build_command, env = setup_env_var(
-        build_command, env, "html_static_path", options.static_path, options.build_with_docker
+        build_command, env, "html_static_path", options.static_path, options.build_in_container
     )
     build_command, env = setup_env_var(
-        build_command, env, "templates_path", options.templates_path, options.build_with_docker
+        build_command, env, "templates_path", options.templates_path, options.build_in_container
     )
 
     # Things to do/set based on whether including version dropdown
@@ -216,7 +216,7 @@ def run_build_command(build_command, version, options):
             env,
             "pages_root",
             options.site_root,
-            options.build_with_docker,
+            options.build_in_container,
         )
     else:
         version_dropdown = ""
@@ -225,34 +225,36 @@ def run_build_command(build_command, version, options):
         env,
         "version_dropdown",
         version_dropdown,
-        options.build_with_docker,
+        options.build_in_container,
     )
 
     print(" ".join(build_command))
     subprocess.check_call(build_command, env=env)
 
 
-def setup_for_docker():
-    """Do some setup for running with docker
+def setup_for_container():
+    """Do some setup for running with container
 
-    Returns a name that should be used in the docker run command
+    Returns a name that should be used in the container run command
     """
 
-    docker_name = "build_docs_" + "".join(random.choice(string.ascii_lowercase) for _ in range(8))
+    container_name = "build_docs_" + "".join(
+        random.choice(string.ascii_lowercase) for _ in range(8)
+    )
 
-    # It seems that, if we kill the build_docs process with Ctrl-C, the docker process
+    # It seems that, if we kill the build_docs process with Ctrl-C, the container process
     # continues. Handle that by implementing a signal handler. There may be a better /
     # more pythonic way to handle this, but this should work.
-    def sigint_kill_docker(signum, frame):
-        """Signal handler: kill docker process before exiting"""
+    def sigint_kill_container(signum, frame):
+        """Signal handler: kill container process before exiting"""
         # pylint: disable=unused-argument
-        docker_kill_cmd = ["docker", "kill", docker_name]
-        subprocess.check_call(docker_kill_cmd)
+        container_kill_cmd = [get_container_cli_tool(), "kill", container_name]
+        subprocess.check_call(container_kill_cmd)
         sys.exit(1)
 
-    signal.signal(signal.SIGINT, sigint_kill_docker)
+    signal.signal(signal.SIGINT, sigint_kill_container)
 
-    return docker_name
+    return container_name
 
 
 def main(cmdline_args=None):
@@ -263,14 +265,14 @@ def main(cmdline_args=None):
     """
     opts = commandline_options(cmdline_args)
 
-    if opts.build_with_docker:
-        # We potentially reuse the same docker name for multiple docker processes: the
+    if opts.build_in_container:
+        # We potentially reuse the same name for multiple container processes: the
         # clean and the actual build. However, since a given process should end before the
-        # next one begins, and because we use '--rm' in the docker run command, this
+        # next one begins, and because we use '--rm' in the container run command, this
         # should be okay.
-        docker_name = setup_for_docker()
+        container_name = setup_for_container()
     else:
-        docker_name = None
+        container_name = None
 
     # Note that we do a separate build for each version. This is
     # inefficient (assuming that the desired end result is for the
@@ -293,8 +295,8 @@ def main(cmdline_args=None):
                 build_target="clean",
                 num_make_jobs=opts.num_make_jobs,
                 version=version,
-                docker_name=docker_name,
-                docker_image=opts.docker_image,
+                container_name=container_name,
+                container_image=opts.container_image,
             )
             run_build_command(build_command=clean_command, version=version, options=opts)
 
@@ -304,8 +306,8 @@ def main(cmdline_args=None):
             build_target=opts.build_target,
             num_make_jobs=opts.num_make_jobs,
             version=version,
-            docker_name=docker_name,
-            docker_image=opts.docker_image,
+            container_name=container_name,
+            container_image=opts.container_image,
             warnings_as_warnings=opts.warnings_as_warnings,
             conf_py_path=opts.conf_py_path,
         )
