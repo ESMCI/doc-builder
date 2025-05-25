@@ -3,9 +3,9 @@ build_docs and build_docs_to_publish share some args. This module adds them to a
 group.
 """
 
+import os
 # pylint: disable=import-error,no-name-in-module
 from .build_commands import DEFAULT_IMAGE
-
 
 def bd_parser(parser, site_root_required=False):
     """
@@ -37,7 +37,7 @@ def bd_parser(parser, site_root_required=False):
     parser.add_argument(
         "--conf-py-path",
         help="Path to conf.py",
-        default=None,
+        default="doc-builder/conf.py",
     )
     parser.add_argument(
         "--static-path",

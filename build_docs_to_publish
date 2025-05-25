@@ -39,6 +39,15 @@ VERSIONS_PY = os.path.join("version_list.py")
 MAKEFILE = "Makefile"
 
 
+def get_static_templates_path_relative_to_here(args, path):
+    """
+    _static and _templates paths are relative to conf.py, but for operations here we need them
+    relative to our current directory.
+    """
+    full_path = os.path.join(os.path.dirname(args.conf_py_path), path)
+    return os.path.relpath(full_path)
+
+
 def setup_this_ref(args):
     """
     Check that the repo is ready for the checkouts that are about to happen
@@ -48,7 +57,14 @@ def setup_this_ref(args):
 
     # Some files/directories/submodules must stay the same for all builds. We list these in
     # the permanent_files list.
-    permanent_files = [VERSIONS_PY, "doc-builder", MAKEFILE]
+    permanent_files = [
+        VERSIONS_PY,
+        "doc-builder",
+        MAKEFILE,
+        args.conf_py_path,
+        get_static_templates_path_relative_to_here(args, args.templates_path),
+        get_static_templates_path_relative_to_here(args, args.static_path),
+    ]
 
     # Check some things about "permanent" files before checkout
     for filename in permanent_files:
@@ -66,7 +82,12 @@ def checkout_and_build(version, permanent_files, args):
     subprocess.check_output("git checkout " + version.ref, shell=True)
 
     # Check out LATEST_REF version of permanent files
-    for filename in permanent_files:
+    for filepath in permanent_files:
+        # Skip if in doc-builder submodule.
+        parent_dir, filename = os.path.split(filepath)
+        if "doc-builder" in os.path.split(parent_dir):
+            continue
+
         subprocess.check_output(f"git checkout {LATEST_REF} -- {filename}", shell=True)
 
     # Build the docs for this version
