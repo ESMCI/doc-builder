@@ -8,6 +8,7 @@ import os
 import random
 import string
 import sys
+import platform
 from urllib.parse import urlparse
 import signal
 
@@ -244,7 +245,7 @@ def run_build_command(build_command, version, options):
     # Start container software/VM
     if "podman" in build_command:
         start_container_software("podman machine start")
-    elif "docker" in build_command:
+    elif "docker" in build_command and platform.system() == "Darwin":  # Darwin means Mac
         start_container_software("docker desktop start")
 
     print(" ".join(build_command))
