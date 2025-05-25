@@ -229,7 +229,20 @@ def run_build_command(build_command, version, options):
     )
 
     print(" ".join(build_command))
-    subprocess.check_call(build_command, env=env)
+    try:
+        subprocess.run(build_command, env=env, capture_output=True, check=True, text=True)
+    except subprocess.CalledProcessError as exc:
+        if "Cannot connect to Podman" in exc.stderr:
+            print("Starting Podman machine...")
+            subprocess.check_call("podman machine start", shell=True, stdout=subprocess.DEVNULL)
+            subprocess.check_call(build_command, env=env)
+        elif "Cannot connect to the Docker daemon" in exc.stderr:
+            print("Starting Docker...")
+            subprocess.check_call("docker desktop start", shell=True, stdout=subprocess.DEVNULL)
+            subprocess.check_call(build_command, env=env)
+        else:
+            print("\n".join([exc.stdout, exc.stderr]))
+            raise exc
 
 
 def setup_for_container():
