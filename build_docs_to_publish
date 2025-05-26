@@ -124,7 +124,11 @@ def reset_git(orig_ref):
     """
     # 1. Get the current ref's version of doc-builder to avoid "would be overwritten by checkout"
     #    errors.
-    subprocess.check_output("git submodule update --checkout doc-builder", shell=True)
+    cmd = "git submodule update --checkout doc-builder".split(" ")
+    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    # If doc-builder not tracked by git, that's fine. Otherwise error.
+    if result.returncode and "did not match any file(s) known to git" not in result.stderr:
+        raise subprocess.CalledProcessError(result.returncode, cmd)
 
     # 2. Check out the original git ref (branch or commit SHA)
     subprocess.check_output("git checkout " + orig_ref, shell=True)
