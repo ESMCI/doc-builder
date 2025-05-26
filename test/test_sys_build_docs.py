@@ -51,6 +51,9 @@ class TestBuildDocs(unittest.TestCase):
         """
 
         makefile_contents = """
+clean:
+\t@sphinx-build -M clean --silent "abc" $(BUILDDIR)
+
 html:
 \t@mkdir -p $(BUILDDIR)
 \t@echo "hello world" > $(BUILDDIR)/testfile
@@ -90,6 +93,28 @@ html:
 
         self.assert_file_contents_equal(
             expected="hello world\n", filepath=os.path.join(build_path, "testfile")
+        )
+    
+    def test_with_repo_root_clean(self):
+        """Test with repo-root and clean=True
+        """
+
+        self.write_makefile()
+        make_git_repo()
+        add_git_commit()
+        checkout_git_branch("foo_branch")
+        build_path = os.path.join(self._build_versions_dir, "foo_branch")
+        os.makedirs(build_path)
+        
+        filepath = os.path.join(build_path, "testfile")
+        with open(filepath, "w", encoding="utf8") as f:
+            f.write("jwenrerien")
+
+        args = ["--repo-root", self._build_reporoot, "-c"]
+        build_docs.main(args)
+
+        self.assert_file_contents_equal(
+            expected="hello world\n", filepath=filepath
         )
 
     def test_multiple_versions(self):
