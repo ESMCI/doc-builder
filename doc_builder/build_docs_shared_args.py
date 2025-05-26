@@ -3,7 +3,6 @@ build_docs and build_docs_to_publish share some args. This module adds them to a
 group.
 """
 
-import os
 # pylint: disable=import-error,no-name-in-module
 from .build_commands import DEFAULT_IMAGE
 
