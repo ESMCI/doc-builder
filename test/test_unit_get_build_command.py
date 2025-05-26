@@ -67,6 +67,20 @@ class TestGetBuildCommand(unittest.TestCase):
         ]
         self.assertEqual(expected, build_command)
 
+    def test_nonexistent_conf_py_path(self):
+        """Tests error with --conf-py-path as nonexistent file"""
+        conf_py_path = "nwirefeirourboub"
+        with self.assertRaisesRegex(FileNotFoundError, "--conf-py-path not found"):
+            get_build_command(
+                build_dir="/path/to/foo",
+                run_from_dir="/irrelevant/path",
+                build_target="html",
+                num_make_jobs=4,
+                container_name=None,
+                version="None",
+                conf_py_path=conf_py_path,
+            )
+
     def test_custom_conf_py_path_dir(self):
         """Tests usage with --conf-py-path as directory"""
         conf_py_path = os.path.dirname(__file__)
@@ -169,6 +183,48 @@ class TestGetBuildCommand(unittest.TestCase):
         self.assertEqual(expected, build_command)
 
     @patch("os.path.expanduser")
+    def test_container_no_clitool_given(self, mock_expanduser):
+        """Tests usage with container"""
+        mock_expanduser.return_value = "/path/to/username"
+        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
+        build_command = get_build_command(
+            build_dir="/path/to/username/foorepos/foodocs/versions/main",
+            run_from_dir="/path/to/username/foorepos/foocode/doc",
+            build_target="html",
+            num_make_jobs=4,
+            container_name="foo",
+            version="None",
+            conf_py_path=conf_py_path,
+            container_cli_tool=None,
+        )
+        expected = [
+            "run",
+            "--name",
+            "foo",
+            "--user",
+            self.uid_gid,
+            "--mount",
+            "type=bind,source=/path/to/username,target=/home/user/mounted_home",
+            "--workdir",
+            "/home/user/mounted_home/foorepos/foocode/doc",
+            "-t",
+            "--rm",
+            "-e",
+            "current_version=None",
+            "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1",
+            "make",
+            f"SPHINXOPTS=-W --keep-going -c '{os.path.dirname(conf_py_path)}'",
+            "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
+            "-j",
+            "4",
+            "html",
+        ]
+        print("build_command: +", " ".join(build_command))
+        self.assertTrue(
+            build_command in [["podman"] + expected, build_command == ["docker"] + expected]
+        )
+
+    @patch("os.path.expanduser")
     def test_container_builddir_not_in_home(self, mock_expanduser):
         """If build_dir is not in the user's home directory, should raise an exception"""
         mock_expanduser.return_value = "/path/to/username"
@@ -195,6 +251,23 @@ class TestGetBuildCommand(unittest.TestCase):
             _ = get_build_command(
                 build_dir="/path/to/username/foorepos/foodocs/versions/main",
                 run_from_dir="/path/to/other/foorepos/foocode/doc",
+                build_target="html",
+                num_make_jobs=4,
+                container_name="foo",
+                version="None",
+            )
+
+    @patch("os.path.expanduser")
+    def test_container_runfromdir_relative(self, mock_expanduser):
+        """If run_from_dir is relative, should raise an exception"""
+        mock_expanduser.return_value = "/path/to/username"
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "Expect absolute path; got",
+        ):
+            _ = get_build_command(
+                build_dir="/path/to/username/foorepos/foodocs/versions/main",
+                run_from_dir="../doc",
                 build_target="html",
                 num_make_jobs=4,
                 container_name="foo",
