@@ -19,7 +19,7 @@ from doc_builder.build_docs import (
     main as build_docs,
 )
 from doc_builder.build_docs_shared_args import main as build_docs_shared_args
-from doc_builder.sys_utils import get_git_head_or_branch, check_permanent_file
+from doc_builder.sys_utils import get_git_head_or_branch, check_permanent_file, get_toplevel_git_dir
 
 # Change to the parent director of doc-builder and add to Python path
 os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -82,12 +82,15 @@ def checkout_and_build(version, permanent_files, args):
     subprocess.check_output("git checkout " + version.ref, shell=True)
 
     # Check out LATEST_REF version of permanent files
+    our_toplevel = get_toplevel_git_dir(os.getcwd())
     for filepath in permanent_files:
-        # Skip if in doc-builder submodule.
-        parent_dir, filename = os.path.split(filepath)
-        if "doc-builder" in os.path.split(parent_dir):
+        # Skip if not in our working tree (i.e., in a submodule or a totally different place)
+        file_toplevel = get_toplevel_git_dir(filepath)
+        if file_toplevel != our_toplevel:
             continue
 
+        # Check out file
+        filename = os.path.basename(filepath)
         subprocess.check_output(f"git checkout {LATEST_REF} -- {filename}", shell=True)
 
     # Build the docs for this version

@@ -65,6 +65,43 @@ def get_git_head_or_branch():
     return output
 
 
+def get_toplevel_git_dir(file_or_dir):
+    """
+    Given a file or directory, get the top-level path of its git working tree.
+    Return None if file isn't in a working tree.
+    """
+    # Change to directory, or file's parent directory
+    orig_dir = os.getcwd()
+    if os.path.isdir(file_or_dir):
+        new_dir = file_or_dir
+    else:
+        new_dir = os.path.abspath(os.path.dirname(file_or_dir))
+    os.chdir(new_dir)
+
+    # Get the top-level path of working tree
+    cmd = ["git", "rev-parse", "--show-toplevel"]
+    result = subprocess.run(
+        cmd,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.stderr:
+        if "not a git repository" in result.stderr:
+            toplevel = None
+        else:
+            print(result.stdout)
+            print(result.stderr)
+            raise subprocess.CalledProcessError(result.returncode, cmd)
+    else:
+        toplevel = result.stdout.strip()
+
+    # Change back to original directory
+    os.chdir(orig_dir)
+
+    return toplevel
+
+
 def git_current_branch():
     """Determines the name of the current git branch
 
