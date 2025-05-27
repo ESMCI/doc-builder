@@ -6,7 +6,7 @@ group.
 import os
 
 # pylint: disable=import-error,no-name-in-module
-from .build_commands import DEFAULT_IMAGE
+from .build_commands import DEFAULT_IMAGE, COMPATIBLE_CLI_TOOLS
 
 
 def bd_parser(parser, site_root_required=False):
@@ -35,6 +35,11 @@ def bd_parser(parser, site_root_required=False):
         "\n"
         f"Default image: {DEFAULT_IMAGE}\n"
         "This can be changed with -i/--container-image.",
+    )
+    parser.add_argument(
+        "--container-cli-tool",
+        help="Container command-line tool to use. Options: " + ", ".join(COMPATIBLE_CLI_TOOLS),
+        default=None,
     )
     parser.add_argument(
         "--conf-py-path",

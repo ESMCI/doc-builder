@@ -317,6 +317,7 @@ def main(cmdline_args=None):
                 version=version,
                 container_name=container_name,
                 container_image=opts.container_image,
+                container_cli_tool=opts.container_cli_tool,
             )
             run_build_command(build_command=clean_command, version=version, options=opts)
 
@@ -330,5 +331,6 @@ def main(cmdline_args=None):
             container_image=opts.container_image,
             warnings_as_warnings=opts.warnings_as_warnings,
             conf_py_path=opts.conf_py_path,
+            container_cli_tool=opts.container_cli_tool,
         )
         run_build_command(build_command=build_command, version=version, options=opts)
