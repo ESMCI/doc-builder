@@ -39,6 +39,8 @@ def get_build_dir(build_dir=None, repo_root=None, version=None):
             raise RuntimeError("Cannot specify both build-dir and repo-root")
         if version is not None:
             raise RuntimeError("Cannot specify both build-dir and version")
+        if not os.path.isdir(build_dir):
+            os.makedirs(build_dir)
         return build_dir, "None"
 
     if repo_root is None:

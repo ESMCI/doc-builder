@@ -8,6 +8,7 @@ import os
 import random
 import string
 import sys
+import platform
 from urllib.parse import urlparse
 import signal
 
@@ -187,6 +188,19 @@ def setup_env_var(build_command, env, env_var, value, container):
     return build_command, env
 
 
+def start_container_software(cmd):
+    """
+    Starts our Podman machine or Docker Desktop, if needed.
+    """
+    subprocess.run(
+        cmd,
+        shell=True,
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
+    )
+
+
 def run_build_command(build_command, version, options):
     """Echo and then run the given build command"""
     env = os.environ.copy()
@@ -228,21 +242,14 @@ def run_build_command(build_command, version, options):
         options.build_in_container,
     )
 
+    # Start container software/VM
+    if "podman" in build_command:
+        start_container_software("podman machine start")
+    elif "docker" in build_command and platform.system() == "Darwin":  # Darwin means Mac
+        start_container_software("docker desktop start")
+
     print(" ".join(build_command))
-    try:
-        subprocess.run(build_command, env=env, capture_output=True, check=True, text=True)
-    except subprocess.CalledProcessError as exc:
-        if "Cannot connect to Podman" in exc.stderr:
-            print("Starting Podman machine...")
-            subprocess.check_call("podman machine start", shell=True, stdout=subprocess.DEVNULL)
-            subprocess.check_call(build_command, env=env)
-        elif "Cannot connect to the Docker daemon" in exc.stderr:
-            print("Starting Docker...")
-            subprocess.check_call("docker desktop start", shell=True, stdout=subprocess.DEVNULL)
-            subprocess.check_call(build_command, env=env)
-        else:
-            print("\n".join([exc.stdout, exc.stderr]))
-            raise exc
+    subprocess.check_call(build_command, env=env)
 
 
 def setup_for_container():
@@ -310,6 +317,7 @@ def main(cmdline_args=None):
                 version=version,
                 container_name=container_name,
                 container_image=opts.container_image,
+                container_cli_tool=opts.container_cli_tool,
             )
             run_build_command(build_command=clean_command, version=version, options=opts)
 
@@ -323,5 +331,6 @@ def main(cmdline_args=None):
             container_image=opts.container_image,
             warnings_as_warnings=opts.warnings_as_warnings,
             conf_py_path=opts.conf_py_path,
+            container_cli_tool=opts.container_cli_tool,
         )
         run_build_command(build_command=build_command, version=version, options=opts)

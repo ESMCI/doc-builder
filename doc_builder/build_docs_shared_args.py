@@ -3,8 +3,10 @@ build_docs and build_docs_to_publish share some args. This module adds them to a
 group.
 """
 
+import os
+
 # pylint: disable=import-error,no-name-in-module
-from .build_commands import DEFAULT_IMAGE
+from .build_commands import DEFAULT_IMAGE, COMPATIBLE_CLI_TOOLS
 
 
 def bd_parser(parser, site_root_required=False):
@@ -35,9 +37,15 @@ def bd_parser(parser, site_root_required=False):
         "This can be changed with -i/--container-image.",
     )
     parser.add_argument(
+        "--container-cli-tool",
+        help="Container command-line tool to use. Options: " + ", ".join(COMPATIBLE_CLI_TOOLS),
+        default=None,
+    )
+    parser.add_argument(
         "--conf-py-path",
         help="Path to conf.py",
-        default=None,
+        # For some reason Sphinx can't handle an absolute path here
+        default=os.path.relpath(os.path.join(os.path.dirname(__file__), os.pardir, "conf.py")),
     )
     parser.add_argument(
         "--static-path",

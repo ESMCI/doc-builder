@@ -6,14 +6,20 @@ import subprocess
 import os
 
 
-def check_permanent_file(filename):
+def check_permanent_file(filepath):
     """
     Check a "permanent" file (one that we don't want to change between doc version builds)
     """
 
     # Ensure file exists
-    if not os.path.exists(filename):
-        raise FileNotFoundError(filename)
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(filepath)
+
+    # Change to directory this file is in. Necessary in case this file is in a submodule.
+    orig_dir = os.getcwd()
+    parent_dir, filename = os.path.split(filepath)
+    if parent_dir:
+        os.chdir(parent_dir)
 
     # Error if file contains uncommitted changes
     cmd = f"git add . && git diff --quiet {filename} && git diff --cached --quiet {filename}"
@@ -23,6 +29,10 @@ def check_permanent_file(filename):
         subprocess.check_output("git reset", shell=True)  # Unstage files staged by `git add`
         msg = f"Important file/submodule may contain uncommitted changes: '{filename}'"
         raise RuntimeError(msg) from exception
+
+    # Change back to original directory
+    if parent_dir:
+        os.chdir(orig_dir)
 
 
 def get_git_head_or_branch():
@@ -53,6 +63,43 @@ def get_git_head_or_branch():
         output = result.stdout.strip()
 
     return output
+
+
+def get_toplevel_git_dir(file_or_dir):
+    """
+    Given a file or directory, get the top-level path of its git working tree.
+    Return None if file isn't in a working tree.
+    """
+    # Change to directory, or file's parent directory
+    orig_dir = os.getcwd()
+    if os.path.isdir(file_or_dir):
+        new_dir = file_or_dir
+    else:
+        new_dir = os.path.abspath(os.path.dirname(file_or_dir))
+    os.chdir(new_dir)
+
+    # Get the top-level path of working tree
+    cmd = ["git", "rev-parse", "--show-toplevel"]
+    result = subprocess.run(
+        cmd,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.stderr:
+        if "not a git repository" in result.stderr:
+            toplevel = None
+        else:
+            print(result.stdout)
+            print(result.stderr)
+            raise subprocess.CalledProcessError(result.returncode, cmd)
+    else:
+        toplevel = result.stdout.strip()
+
+    # Change back to original directory
+    os.chdir(orig_dir)
+
+    return toplevel
 
 
 def git_current_branch():
