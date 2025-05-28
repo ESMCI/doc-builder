@@ -125,7 +125,7 @@ def get_build_command(
     # Mount the user's home directory in the container; this assumes that both
     # run_from_dir and build_dir reside somewhere under the user's home directory (we
     # check this assumption below).
-    container_mountpoint = os.path.expanduser("~")
+    container_mountpoint = os.path.realpath(os.pardir)
 
     errmsg_if_not_under_mountpoint = "build_docs must be run from somewhere in your home directory"
     container_workdir = _container_path_from_local_path(
@@ -167,8 +167,8 @@ def get_build_command(
         container_name,
         "--user",
         f"{uid}:{gid}",
-        "--mount",
-        f"type=bind,source={container_mountpoint},target={_CONTAINER_HOME}",
+        "-v",
+        f"{container_mountpoint}:{_CONTAINER_HOME}:U",
         "--workdir",
         container_workdir,
         "-t",  # "-t" is needed for colorful output
