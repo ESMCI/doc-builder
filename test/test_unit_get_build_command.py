@@ -103,10 +103,10 @@ class TestGetBuildCommand(unittest.TestCase):
         ]
         self.assertEqual(expected, build_command)
 
-    @patch("os.path.expanduser")
-    def test_container(self, mock_expanduser):
+    @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
+    def test_container(self, mock_get_toplevel_of_doc_builder_parent):
         """Tests usage with container"""
-        mock_expanduser.return_value = "/path/to/username"
+        mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
         conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/username/foorepos/foodocs/versions/main",
@@ -125,8 +125,8 @@ class TestGetBuildCommand(unittest.TestCase):
             "foo",
             "--user",
             self.uid_gid,
-            "--mount",
-            "type=bind,source=/path/to/username,target=/home/user/mounted_home",
+            "-v",
+            "/path/to/username:/home/user/mounted_home:U",
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -144,10 +144,10 @@ class TestGetBuildCommand(unittest.TestCase):
         print("build_command: +", " ".join(build_command))
         self.assertEqual(expected, build_command)
 
-    @patch("os.path.expanduser")
-    def test_container_relpath(self, mock_expanduser):
+    @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
+    def test_container_relpath(self, mock_get_toplevel_of_doc_builder_parent):
         """Tests usage with container, with a relative path to build_dir"""
-        mock_expanduser.return_value = "/path/to/username"
+        mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
         build_command = get_build_command(
             build_dir="../../foodocs/versions/main",
             run_from_dir="/path/to/username/foorepos/foocode/doc",
@@ -164,8 +164,8 @@ class TestGetBuildCommand(unittest.TestCase):
             "foo",
             "--user",
             self.uid_gid,
-            "--mount",
-            "type=bind,source=/path/to/username,target=/home/user/mounted_home",
+            "-v",
+            "/path/to/username:/home/user/mounted_home:U",
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -182,10 +182,10 @@ class TestGetBuildCommand(unittest.TestCase):
         ]
         self.assertEqual(expected, build_command)
 
-    @patch("os.path.expanduser")
-    def test_container_no_clitool_given(self, mock_expanduser):
+    @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
+    def test_container_no_clitool_given(self, mock_get_toplevel_of_doc_builder_parent):
         """Tests usage with container"""
-        mock_expanduser.return_value = "/path/to/username"
+        mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
         conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/username/foorepos/foodocs/versions/main",
@@ -203,8 +203,8 @@ class TestGetBuildCommand(unittest.TestCase):
             "foo",
             "--user",
             self.uid_gid,
-            "--mount",
-            "type=bind,source=/path/to/username,target=/home/user/mounted_home",
+            "-v",
+            "/path/to/username:/home/user/mounted_home:U",
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -224,13 +224,11 @@ class TestGetBuildCommand(unittest.TestCase):
             build_command in [["podman"] + expected, build_command == ["docker"] + expected]
         )
 
-    @patch("os.path.expanduser")
-    def test_container_builddir_not_in_home(self, mock_expanduser):
-        """If build_dir is not in the user's home directory, should raise an exception"""
-        mock_expanduser.return_value = "/path/to/username"
-        with self.assertRaisesRegex(
-            RuntimeError, "build directory must reside under your home directory"
-        ):
+    @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
+    def test_container_builddir_not_in_db_checkout(self, mock_get_toplevel_of_doc_builder_parent):
+        """If build_dir is not in parent of doc-builder, should raise an exception"""
+        mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
+        with self.assertRaisesRegex(RuntimeError, "build directory must be somewhere in"):
             _ = get_build_command(
                 build_dir="/path/to/other/foorepos/foodocs/versions/main",
                 run_from_dir="/path/to/username/foorepos/foocode/doc",
@@ -240,14 +238,11 @@ class TestGetBuildCommand(unittest.TestCase):
                 version="None",
             )
 
-    @patch("os.path.expanduser")
-    def test_container_runfromdir_not_in_home(self, mock_expanduser):
-        """If run_from_dir is not in the user's home directory, should raise an exception"""
-        mock_expanduser.return_value = "/path/to/username"
-        with self.assertRaisesRegex(
-            RuntimeError,
-            "build_docs must be run from somewhere in your home directory",
-        ):
+    @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
+    def test_container_runfromdir_not_in_db_parent(self, mock_get_toplevel_of_doc_builder_parent):
+        """If run_from_dir is not in parent of doc-builder, should raise an exception"""
+        mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
+        with self.assertRaisesRegex(RuntimeError, "build_docs must be run from somewhere in"):
             _ = get_build_command(
                 build_dir="/path/to/username/foorepos/foodocs/versions/main",
                 run_from_dir="/path/to/other/foorepos/foocode/doc",
@@ -257,10 +252,10 @@ class TestGetBuildCommand(unittest.TestCase):
                 version="None",
             )
 
-    @patch("os.path.expanduser")
-    def test_container_runfromdir_relative(self, mock_expanduser):
+    @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
+    def test_container_runfromdir_relative(self, mock_get_toplevel_of_doc_builder_parent):
         """If run_from_dir is relative, should raise an exception"""
-        mock_expanduser.return_value = "/path/to/username"
+        mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
         with self.assertRaisesRegex(
             RuntimeError,
             "Expect absolute path; got",

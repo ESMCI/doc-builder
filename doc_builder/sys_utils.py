@@ -102,6 +102,13 @@ def get_toplevel_git_dir(file_or_dir):
     return toplevel
 
 
+def get_toplevel_of_doc_builder_parent():
+    """Get the top level of the repo of which doc-builder is a submodule"""
+    topdir_doc_builder = get_toplevel_git_dir(__file__)
+    topdir_parent = get_toplevel_git_dir(os.path.join(topdir_doc_builder, os.pardir))
+    return topdir_parent
+
+
 def git_current_branch():
     """Determines the name of the current git branch
 
@@ -124,3 +131,15 @@ def git_current_branch():
             branch_name = branch_name.strip()
 
     return branch_found, branch_name
+
+
+def is_under(child, parent_dir):
+    """Check whether child is in parent_dir
+
+    Args:
+        child (str): Path of child directory or file
+        parent_dir (str): Path of parent directory
+    """
+    if parent_dir[-1] != os.sep:
+        parent_dir += os.sep
+    return child.startswith(parent_dir)

@@ -9,7 +9,7 @@ from doc_builder import sys_utils  # pylint: disable=import-error
 
 DEFAULT_IMAGE = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 
-# The path in the container's filesystem where the user's home directory is mounted
+# The path in the container's filesystem where doc-builder's parent repo checkout is mounted
 _CONTAINER_HOME = "/home/user/mounted_home"
 
 # CLI tools we can try to use to run our container, in decreasing order of preference
@@ -122,16 +122,13 @@ def get_build_command(
 
     # But if we're using a container, we have more work to do to create the command....
 
-    # Mount the user's home directory in the container; this assumes that both
-    # run_from_dir and build_dir reside somewhere under the user's home directory (we
-    # check this assumption below).
-    container_mountpoint = os.path.expanduser("~")
-
-    errmsg_if_not_under_mountpoint = "build_docs must be run from somewhere in your home directory"
+    # Mount the parent directory of doc-builder in the container; this assumes that both
+    # run_from_dir and build_dir are in this parent directory.
+    container_mountpoint = sys_utils.get_toplevel_of_doc_builder_parent()
     container_workdir = _container_path_from_local_path(
         local_path=run_from_dir,
         container_mountpoint=container_mountpoint,
-        errmsg_if_not_under_mountpoint=errmsg_if_not_under_mountpoint,
+        msg_start="build_docs must be run from",
     )
 
     if os.path.isabs(build_dir):
@@ -141,7 +138,7 @@ def get_build_command(
     container_build_dir = _container_path_from_local_path(
         local_path=build_dir_abs,
         container_mountpoint=container_mountpoint,
-        errmsg_if_not_under_mountpoint="build directory must reside under your home directory",
+        msg_start="build directory must be",
     )
 
     # Get current user's UID and GID
@@ -167,8 +164,8 @@ def get_build_command(
         container_name,
         "--user",
         f"{uid}:{gid}",
-        "--mount",
-        f"type=bind,source={container_mountpoint},target={_CONTAINER_HOME}",
+        "-v",
+        f"{container_mountpoint}:{_CONTAINER_HOME}:U",
         "--workdir",
         container_workdir,
         "-t",  # "-t" is needed for colorful output
@@ -202,20 +199,19 @@ def _get_make_command(build_dir, build_target, num_make_jobs, warnings_as_warnin
     return ["make", sphinxopts, builddir_arg, "-j", str(num_make_jobs), build_target]
 
 
-def _container_path_from_local_path(
-    local_path, container_mountpoint, errmsg_if_not_under_mountpoint
-):
+def _container_path_from_local_path(local_path, container_mountpoint, msg_start):
     """Given a path on the local file system, return the equivalent path in container space
 
     Args:
     - local_path: string: absolute path on local file system; this must reside under
         container_mountpoint
     - container_mountpoint: string: path on local file system that is mounted to _CONTAINER_HOME
-    - errmsg_if_not_under_mountpoint: string: message to print if local_path does not
-        reside under container_mountpoint
+    - msg_start: string: start of the error message
     """
     if not os.path.isabs(local_path):
         raise RuntimeError(f"Expect absolute path; got {local_path}")
+
+    errmsg_if_not_under_mountpoint = f"{msg_start} somewhere in {container_mountpoint}"
 
     local_pathobj = pathlib.Path(local_path)
     try:
