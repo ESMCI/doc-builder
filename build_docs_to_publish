@@ -195,7 +195,8 @@ def main():
             dst = args.publish_dir
         else:
             dst = os.path.join(args.publish_dir, version.short_name)
-        os.makedirs(dst)
+        if not os.path.exists(dst):
+            os.makedirs(dst)
         subprocess.check_output(f"mv '{src}'/* '{dst}'/", shell=True)
 
 
