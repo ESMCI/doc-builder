@@ -4,6 +4,7 @@ Functions that wrap system calls, including calls to the OS, git, etc.
 
 import subprocess
 import os
+import platform
 
 
 def check_permanent_file(filepath):
@@ -131,6 +132,11 @@ def git_current_branch():
             branch_name = branch_name.strip()
 
     return branch_found, branch_name
+
+
+def is_mac():
+    """Returns True if running on a Mac"""
+    return platform.system() == "Darwin"
 
 
 def is_under(child, parent_dir):

@@ -19,7 +19,13 @@ from doc_builder.build_docs import (
     main as build_docs,
 )
 from doc_builder.build_docs_shared_args import main as build_docs_shared_args
-from doc_builder.sys_utils import get_git_head_or_branch, check_permanent_file, get_toplevel_git_dir
+from doc_builder.sys_utils import (
+    get_git_head_or_branch,
+    check_permanent_file,
+    get_toplevel_git_dir,
+    is_mac,
+)
+from doc_builder.build_commands import get_container_cli_tool
 
 # Change to the parent director of doc-builder and add to Python path
 os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
@@ -130,6 +136,9 @@ def reset_git(orig_ref):
     result = subprocess.run(cmd, check=False, capture_output=True, text=True)
     # If doc-builder not tracked by git, that's fine. Otherwise error.
     if result.returncode and "did not match any file(s) known to git" not in result.stderr:
+        print("PWD: " + os.getcwd())
+        print(result.stdout)
+        print(result.stderr)
         raise subprocess.CalledProcessError(result.returncode, cmd)
 
     # 2. Check out the original git ref (branch or commit SHA)
@@ -175,6 +184,15 @@ def main():
 
     # Check version list for problems
     check_version_list()
+
+    # build_docs_to_publish has trouble on Linux (maybe just Ubuntu?) with Podman. Only allow
+    # Docker. Issue filed: https://github.com/ESMCI/doc-builder/issues/27
+    if args.container_cli_tool is None:
+        args.container_cli_tool = get_container_cli_tool()
+    if args.container_cli_tool == "podman" and not is_mac():
+        raise RuntimeError(
+            "build_docs_to_publish is only supported for Podman on Macs. Use Docker instead."
+        )
 
     # Loop over all documentation versions
     for version in VERSION_LIST:

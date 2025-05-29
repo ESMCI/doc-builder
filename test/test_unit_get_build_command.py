@@ -5,7 +5,9 @@
 import os
 import unittest
 from unittest.mock import patch
-from doc_builder.build_commands import get_build_command  # pylint: disable=import-error
+
+# pylint: disable=import-error
+from doc_builder.build_commands import get_build_command, get_mount_arg, get_container_cli_tool
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -118,6 +120,7 @@ class TestGetBuildCommand(unittest.TestCase):
             conf_py_path=conf_py_path,
             container_cli_tool="abc123",
         )
+        mount_option, mount_arg = get_mount_arg("/path/to/username")
         expected = [
             "abc123",
             "run",
@@ -125,8 +128,8 @@ class TestGetBuildCommand(unittest.TestCase):
             "foo",
             "--user",
             self.uid_gid,
-            "-v",
-            "/path/to/username:/home/user/mounted_home:U",
+            mount_option,
+            mount_arg,
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -157,6 +160,7 @@ class TestGetBuildCommand(unittest.TestCase):
             version="None",
             container_cli_tool="abc123",
         )
+        mount_option, mount_arg = get_mount_arg("/path/to/username")
         expected = [
             "abc123",
             "run",
@@ -164,8 +168,8 @@ class TestGetBuildCommand(unittest.TestCase):
             "foo",
             "--user",
             self.uid_gid,
-            "-v",
-            "/path/to/username:/home/user/mounted_home:U",
+            mount_option,
+            mount_arg,
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -197,14 +201,15 @@ class TestGetBuildCommand(unittest.TestCase):
             conf_py_path=conf_py_path,
             container_cli_tool=None,
         )
+        mount_option, mount_arg = get_mount_arg("/path/to/username")
         expected = [
             "run",
             "--name",
             "foo",
             "--user",
             self.uid_gid,
-            "-v",
-            "/path/to/username:/home/user/mounted_home:U",
+            mount_option,
+            mount_arg,
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -220,9 +225,7 @@ class TestGetBuildCommand(unittest.TestCase):
             "html",
         ]
         print("build_command: +", " ".join(build_command))
-        self.assertTrue(
-            build_command in [["podman"] + expected, build_command == ["docker"] + expected]
-        )
+        self.assertEqual(build_command, [get_container_cli_tool()] + expected)
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
     def test_container_builddir_not_in_db_checkout(self, mock_get_toplevel_of_doc_builder_parent):

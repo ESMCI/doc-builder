@@ -13,7 +13,12 @@ DEFAULT_IMAGE = "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1"
 _CONTAINER_HOME = "/home/user/mounted_home"
 
 # CLI tools we can try to use to run our container, in decreasing order of preference
-COMPATIBLE_CLI_TOOLS = ["podman", "docker"]
+if sys_utils.is_mac():
+    # Prefer Podman because Docker Desktop isn't always free
+    COMPATIBLE_CLI_TOOLS = ["podman", "docker"]
+else:
+    # On Linux, Docker Engine (free) can be obtained without Docker Desktop, and it works better
+    COMPATIBLE_CLI_TOOLS = ["docker", "podman"]
 
 
 def get_build_dir(build_dir=None, repo_root=None, version=None):
@@ -79,6 +84,24 @@ def get_container_cli_tool():
         if shutil.which(tool):
             return tool
     raise RuntimeError(f"No compatible container software found: {', '.join(COMPATIBLE_CLI_TOOLS)}")
+
+
+def get_mount_arg(container_mountpoint, container_cli_tool=None):
+    """
+    Get the Podman/Docker mount argument depending on which we're using and whether we're on Mac
+    """
+    if container_cli_tool is None:
+        container_cli_tool = get_container_cli_tool()
+
+    # This is preferred for performance reasons (at least on Mac)
+    mount_option = "--mount"
+    mount_arg = f"type=bind,source={container_mountpoint},target={_CONTAINER_HOME}"
+
+    # This fallback is needed for Podman on Linux machines,
+    if container_cli_tool == "podman" and not sys_utils.is_mac():
+        mount_option = "-v"
+        mount_arg = f"{container_mountpoint}:{_CONTAINER_HOME}:U"
+    return mount_option, mount_arg
 
 
 def get_build_command(
@@ -157,6 +180,9 @@ def get_build_command(
     if container_cli_tool is None:
         container_cli_tool = get_container_cli_tool()
 
+    # Get argument for mounting/binding
+    mount_option, mount_arg = get_mount_arg(container_mountpoint, container_cli_tool)
+
     container_command = [
         container_cli_tool,
         "run",
@@ -164,8 +190,8 @@ def get_build_command(
         container_name,
         "--user",
         f"{uid}:{gid}",
-        "-v",
-        f"{container_mountpoint}:{_CONTAINER_HOME}:U",
+        mount_option,
+        mount_arg,
         "--workdir",
         container_workdir,
         "-t",  # "-t" is needed for colorful output
