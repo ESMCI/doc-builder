@@ -5,7 +5,8 @@
 import os
 import unittest
 from unittest.mock import patch
-from doc_builder.build_commands import get_build_command  # pylint: disable=import-error
+# pylint: disable=import-error
+from doc_builder.build_commands import get_build_command, get_mount_arg
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -118,6 +119,7 @@ class TestGetBuildCommand(unittest.TestCase):
             conf_py_path=conf_py_path,
             container_cli_tool="abc123",
         )
+        mount_option, mount_arg = get_mount_arg("/path/to/username")
         expected = [
             "abc123",
             "run",
@@ -125,8 +127,8 @@ class TestGetBuildCommand(unittest.TestCase):
             "foo",
             "--user",
             self.uid_gid,
-            "-v",
-            "/path/to/username:/home/user/mounted_home:U",
+            mount_option,
+            mount_arg,
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -157,6 +159,7 @@ class TestGetBuildCommand(unittest.TestCase):
             version="None",
             container_cli_tool="abc123",
         )
+        mount_option, mount_arg = get_mount_arg("/path/to/username")
         expected = [
             "abc123",
             "run",
@@ -164,8 +167,8 @@ class TestGetBuildCommand(unittest.TestCase):
             "foo",
             "--user",
             self.uid_gid,
-            "-v",
-            "/path/to/username:/home/user/mounted_home:U",
+            mount_option,
+            mount_arg,
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
@@ -197,14 +200,15 @@ class TestGetBuildCommand(unittest.TestCase):
             conf_py_path=conf_py_path,
             container_cli_tool=None,
         )
+        mount_option, mount_arg = get_mount_arg("/path/to/username")
         expected = [
             "run",
             "--name",
             "foo",
             "--user",
             self.uid_gid,
-            "-v",
-            "/path/to/username:/home/user/mounted_home:U",
+            mount_option,
+            mount_arg,
             "--workdir",
             "/home/user/mounted_home/foorepos/foocode/doc",
             "-t",
