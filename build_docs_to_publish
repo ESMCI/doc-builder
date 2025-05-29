@@ -130,6 +130,9 @@ def reset_git(orig_ref):
     result = subprocess.run(cmd, check=False, capture_output=True, text=True)
     # If doc-builder not tracked by git, that's fine. Otherwise error.
     if result.returncode and "did not match any file(s) known to git" not in result.stderr:
+        print("PWD: " + os.getcwd())
+        print(result.stdout)
+        print(result.stderr)
         raise subprocess.CalledProcessError(result.returncode, cmd)
 
     # 2. Check out the original git ref (branch or commit SHA)
