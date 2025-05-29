@@ -5,8 +5,9 @@
 import os
 import unittest
 from unittest.mock import patch
+
 # pylint: disable=import-error
-from doc_builder.build_commands import get_build_command, get_mount_arg
+from doc_builder.build_commands import get_build_command, get_mount_arg, get_container_cli_tool
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -224,9 +225,7 @@ class TestGetBuildCommand(unittest.TestCase):
             "html",
         ]
         print("build_command: +", " ".join(build_command))
-        self.assertTrue(
-            build_command in [["podman"] + expected, build_command == ["docker"] + expected]
-        )
+        self.assertEqual(build_command, [get_container_cli_tool()] + expected)
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
     def test_container_builddir_not_in_db_checkout(self, mock_get_toplevel_of_doc_builder_parent):
