@@ -249,7 +249,36 @@ def run_build_command(build_command, version, options):
         start_container_software("docker desktop start")
 
     print(" ".join(build_command))
-    subprocess.check_call(build_command, env=env)
+    try:
+        subprocess.run(build_command, env=env, check=True, capture_output=True)
+    except subprocess.CalledProcessError as err:
+        stderr_text = err.stderr.decode("utf-8", errors="replace")
+        if "failed to chown recursively host path" not in stderr_text:
+            sys.stdout.write(err.stdout.decode("utf-8", errors="replace"))
+            sys.stderr.write(err.stderr.decode("utf-8", errors="replace"))
+            raise
+        print("Container failed due to missing subuid/subgid mappings.")
+        print("Retrying without :U mount flag and with --user 0:0...")
+        build_command = _fix_command_for_missing_subids(build_command)
+        print(" ".join(build_command))
+        subprocess.check_call(build_command, env=env)
+
+
+def _fix_command_for_missing_subids(build_command):
+    """Modify a container build command to work without subuid/subgid mappings.
+
+    This removes the :U suffix from volume mounts and changes --user to 0:0
+    (in rootless podman, UID 0 in the container maps to the host user).
+    """
+    fixed = []
+    for i, arg in enumerate(build_command):
+        if arg.endswith(":U"):
+            fixed.append(arg[:-2])
+        elif i > 0 and build_command[i - 1] == "--user":
+            fixed.append("0:0")
+        else:
+            fixed.append(arg)
+    return fixed
 
 
 def setup_for_container():
