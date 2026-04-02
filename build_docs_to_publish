@@ -23,7 +23,6 @@ from doc_builder.sys_utils import (
     get_git_head_or_branch,
     check_permanent_file,
     get_toplevel_git_dir,
-    is_mac,
 )
 from doc_builder.build_commands import get_container_cli_tool
 
@@ -181,18 +180,11 @@ def main():
 
     # Parse arguments
     args = parser.parse_args()
+    if args.container_cli_tool is None:
+        args.container_cli_tool = get_container_cli_tool()
 
     # Check version list for problems
     check_version_list()
-
-    # build_docs_to_publish has trouble on Linux (maybe just Ubuntu?) with Podman. Only allow
-    # Docker. Issue filed: https://github.com/ESMCI/doc-builder/issues/27
-    if args.container_cli_tool is None:
-        args.container_cli_tool = get_container_cli_tool()
-    if args.container_cli_tool == "podman" and not is_mac():
-        raise RuntimeError(
-            "build_docs_to_publish is only supported for Podman on Macs. Use Docker instead."
-        )
 
     # Loop over all documentation versions
     for version in VERSION_LIST:
