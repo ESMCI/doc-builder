@@ -39,7 +39,7 @@ extensions = ['sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.githubpages',
-    'sphinx_mdinclude',
+    'myst_parser',
     ]
 
 # Add any paths that contain templates here, relative to this directory.
