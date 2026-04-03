@@ -93,6 +93,15 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
+# Do not render straight quotes as smart quotes.
+smartquotes = False
+
+# -- Options for MyST Markdown --------------------------------------------
+
+myst_enable_extensions = [
+    "dollarmath",
+]
+
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
