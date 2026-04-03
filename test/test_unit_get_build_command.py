@@ -7,7 +7,12 @@ import unittest
 from unittest.mock import patch
 
 # pylint: disable=import-error
-from doc_builder.build_commands import get_build_command, get_mount_arg, get_container_cli_tool
+from doc_builder.build_commands import (
+    get_build_command,
+    get_mount_arg,
+    get_container_cli_tool,
+    DEFAULT_IMAGE,
+)
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -136,7 +141,7 @@ class TestGetBuildCommand(unittest.TestCase):
             "--rm",
             "-e",
             "current_version=None",
-            "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1",
+            DEFAULT_IMAGE,
             "make",
             f"SPHINXOPTS=-W --keep-going -c '{os.path.dirname(conf_py_path)}'",
             "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
@@ -176,7 +181,7 @@ class TestGetBuildCommand(unittest.TestCase):
             "--rm",
             "-e",
             "current_version=None",
-            "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1",
+            DEFAULT_IMAGE,
             "make",
             "SPHINXOPTS=-W --keep-going",
             "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
@@ -216,7 +221,7 @@ class TestGetBuildCommand(unittest.TestCase):
             "--rm",
             "-e",
             "current_version=None",
-            "ghcr.io/escomp/ctsm/ctsm-docs:v1.0.1",
+            DEFAULT_IMAGE,
             "make",
             f"SPHINXOPTS=-W --keep-going -c '{os.path.dirname(conf_py_path)}'",
             "BUILDDIR=/home/user/mounted_home/foorepos/foodocs/versions/main",
