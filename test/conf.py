@@ -32,7 +32,7 @@ extensions = ['sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.githubpages',
-    'sphinx_mdinclude',
+    'myst_parser',
     ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,6 +82,15 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# Do not render straight quotes as smart quotes.
+smartquotes = False
+
+# -- Options for MyST Markdown --------------------------------------------
+
+myst_enable_extensions = [
+    "dollarmath",
+]
 
 # -- Options for HTML output ----------------------------------------------
 
