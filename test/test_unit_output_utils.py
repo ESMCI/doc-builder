@@ -80,6 +80,10 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         result = extract_sphinx_complaints(stdout, stderr)
         self.assertEqual(result, [_WARNING_WITH_LOCATION, _ERROR_WITHOUT_LOCATION])
 
+    def test_zero_arguments(self):
+        """Calling with zero arguments returns empty list"""
+        self.assertEqual(extract_sphinx_complaints(), [])
+
 
 if __name__ == "__main__":
     unittest.main()
