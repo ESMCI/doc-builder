@@ -154,6 +154,13 @@ based on the version indicated by the current branch, is:
         help="Treat sphinx warnings as warnings, not errors.",
     )
 
+    parser.add_argument(
+        "-V",
+        "--verbose",
+        action="store_true",
+        help="Show full build output. Default shows only errors/warnings.",
+    )
+
     options = parser.parse_args(cmdline_args)
 
     print(f"options: {options}")

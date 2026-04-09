@@ -79,6 +79,21 @@ class TestCmdlineArgs(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, msg):
             commandline_options(self.fake_builddir + ["--versions"])
 
+    def test_verbose_default_false(self):
+        """Verbose should default to False"""
+        opts = commandline_options(self.fake_builddir)
+        self.assertFalse(opts.verbose)
+
+    def test_verbose_long_flag(self):
+        """--verbose should set verbose to True"""
+        opts = commandline_options(self.fake_builddir + ["--verbose"])
+        self.assertTrue(opts.verbose)
+
+    def test_verbose_short_flag(self):
+        """-V should set verbose to True"""
+        opts = commandline_options(self.fake_builddir + ["-V"])
+        self.assertTrue(opts.verbose)
+
 
 if __name__ == "__main__":
     unittest.main()
