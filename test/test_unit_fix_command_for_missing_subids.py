@@ -93,6 +93,7 @@ def _make_options():
         templates_path="_templates",
         versions=False,
         build_in_container=True,
+        verbose=True,
     )
 
 
