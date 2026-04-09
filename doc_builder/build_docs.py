@@ -294,7 +294,9 @@ def run_build_command(build_command, version, options):
         stderr_text = err.stderr.decode("utf-8", errors="replace")
         if "failed to chown recursively host path" not in stderr_text:
             _report_build_failure(err, verbose)
-            raise
+            if verbose:
+                raise
+            sys.exit(1)
         if verbose:
             print("Container failed due to missing subuid/subgid mappings.")
             print("Retrying without :U mount flag and with --user 0:0...")

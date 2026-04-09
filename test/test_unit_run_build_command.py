@@ -87,7 +87,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(subprocess.CalledProcessError):
+            with self.assertRaises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
         self.assertIn("WARNING: toctree contains reference", combined)
@@ -107,7 +107,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(subprocess.CalledProcessError):
+            with self.assertRaises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
         self.assertIn("--verbose", combined)
@@ -122,7 +122,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(subprocess.CalledProcessError):
+            with self.assertRaises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
         self.assertIn("Documentation build failed.", combined)
