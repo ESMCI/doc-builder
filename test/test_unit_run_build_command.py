@@ -184,28 +184,12 @@ class TestMaybeStartContainer(unittest.TestCase):
     """Tests for _maybe_start_container output"""
 
     @patch("doc_builder.build_docs.start_container_software")
-    def test_non_verbose_indented_starting_message(self, _mock_start):
-        """In non-verbose mode, container start message should be indented"""
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            _maybe_start_container(["podman", "run", "image"], verbose=False)
-        self.assertIn("   Starting container...", mock_stdout.getvalue())
-
-    @patch("doc_builder.build_docs.start_container_software")
-    def test_non_verbose_done_message(self, _mock_start):
-        """In non-verbose mode, prints 'Done.' after container starts"""
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            _maybe_start_container(["podman", "run", "image"], verbose=False)
-        output = mock_stdout.getvalue()
-        self.assertIn("Done.", output)
-        # "Done." should come after "Starting container..."
-        self.assertGreater(output.index("Done."), output.index("Starting container..."))
-
-    @patch("doc_builder.build_docs.start_container_software")
-    def test_verbose_no_starting_message(self, _mock_start):
-        """In verbose mode, no container start message is printed"""
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-            _maybe_start_container(["podman", "run", "image"], verbose=True)
-        self.assertEqual("", mock_stdout.getvalue())
+    def test_no_output(self, _mock_start):
+        """Container startup should not print anything"""
+        for verbose in (True, False):
+            with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+                _maybe_start_container(["podman", "run", "image"])
+            self.assertEqual("", mock_stdout.getvalue())
 
 
 if __name__ == "__main__":

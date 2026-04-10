@@ -240,20 +240,12 @@ def _report_build_failure(err, verbose):
         sys.stderr.write("Re-run with --verbose for full output.\n")
 
 
-def _maybe_start_container(build_command, verbose):
+def _maybe_start_container(build_command):
     """Start container software/VM if the build command uses one."""
     if "podman" in build_command:
-        if not verbose:
-            print("   Starting container...")
         start_container_software("podman machine start")
-        if not verbose:
-            print("   Done.")
     elif "docker" in build_command and is_mac():
-        if not verbose:
-            print("   Starting container...")
         start_container_software("docker desktop start")
-        if not verbose:
-            print("   Done.")
 
 
 def run_build_command(build_command, version, options):
@@ -302,7 +294,7 @@ def run_build_command(build_command, version, options):
         options.build_in_container,
     )
 
-    _maybe_start_container(build_command, verbose)
+    _maybe_start_container(build_command)
 
     if verbose:
         print(" ".join(build_command))
