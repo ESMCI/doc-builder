@@ -307,7 +307,11 @@ def run_build_command(build_command, version, options):
     # Print "The HTML pages are in ..." bit, which if we're not verbose is part of the suppressed
     # stdout
     if not verbose and build_command[-1] == "html":
-        print(result.stdout.decode("utf-8").rsplit("\n", 2)[-2])
+        result_lines = result.stdout.decode("utf-8").splitlines()
+        for line in result_lines:
+            if line.startswith("The HTML pages are in"):
+                print(line)
+                break
 
     print("Done.")
 
