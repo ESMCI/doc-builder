@@ -302,7 +302,12 @@ def run_build_command(build_command, version, options):
     if verbose:
         print(" ".join(build_command))
 
-    _try_build_command(build_command, verbose, env)
+    result = _try_build_command(build_command, verbose, env)
+
+    # Print "The HTML pages are in ..." bit, which if we're not verbose is part of the suppressed
+    # stdout
+    if not verbose and build_command[-1] == "html":
+        print(result.stdout.decode("utf-8").rsplit("\n", 2)[-2])
 
     print("Done.")
 
@@ -310,7 +315,7 @@ def run_build_command(build_command, version, options):
 def _try_build_command(build_command, verbose, env):
     """Try the docs build command, retrying via recursion if needed"""
     try:
-        subprocess.run(build_command, env=env, check=True, capture_output=True)
+        result = subprocess.run(build_command, env=env, check=True, capture_output=True)
     except subprocess.CalledProcessError as err:
         stderr_text = err.stderr.decode("utf-8", errors="replace")
 
@@ -330,7 +335,8 @@ def _try_build_command(build_command, verbose, env):
         build_command = _fix_command_for_missing_subids(build_command)
         if verbose:
             print(" ".join(build_command))
-        _try_build_command(build_command, verbose, env)
+        result = _try_build_command(build_command, verbose, env)
+    return result
 
 
 def _fix_command_for_missing_subids(build_command):
