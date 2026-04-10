@@ -75,7 +75,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         opts = _make_options(verbose=False)
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
-        self.assertIn("Documentation build complete.", mock_stdout.getvalue())
+        self.assertIn("Done.", mock_stdout.getvalue())
 
     @patch("subprocess.run")
     def test_success_non_verbose_no_command_echo(self, mock_run):
