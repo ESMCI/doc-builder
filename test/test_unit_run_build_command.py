@@ -8,7 +8,12 @@ from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 from io import StringIO
 
-from doc_builder.build_docs import run_build_command  # pylint: disable=import-error
+from doc_builder.build_docs import (  # pylint: disable=import-error
+    run_build_command,
+    _MSG_BUILD_FAILED,
+    _MSG_BUILD_COMPLETED_WITH_PROBLEMS,
+    _SPHINX_BUILD_FINISHED_WITH_PROBLEMS,
+)
 
 
 # A minimal options object for testing (non-container)
@@ -32,6 +37,9 @@ _SPHINX_STDOUT_WITH_WARNINGS = (
     "WARNING: unknown config value 'bogus'\n"
 )
 _SPHINX_STDERR_WITH_ERROR = "ERROR: master file not found\n"
+_SPHINX_STDERR_FINISHED_WITH_PROBLEMS = (
+    "WARNING: unknown config value 'bogus'\n" + _SPHINX_BUILD_FINISHED_WITH_PROBLEMS + "\n"
+)
 
 
 def _make_options(verbose):
@@ -114,7 +122,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
 
     @patch("subprocess.run")
     def test_failure_non_verbose_shows_failed_message(self, mock_run):
-        """On failure in non-verbose mode, shows 'Documentation build failed.'"""
+        """On hard failure (not 'finished with problems'), shows failed message"""
         mock_run.side_effect = _make_called_process_error(
             _SPHINX_STDOUT_WITH_WARNINGS, _SPHINX_STDERR_WITH_ERROR
         )
@@ -125,7 +133,24 @@ class TestRunBuildCommandOutput(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
-        self.assertIn("Documentation build failed.", combined)
+        self.assertIn(_MSG_BUILD_FAILED, combined)
+        self.assertNotIn(_MSG_BUILD_COMPLETED_WITH_PROBLEMS, combined)
+
+    @patch("subprocess.run")
+    def test_failure_non_verbose_finished_with_problems(self, mock_run):
+        """When Sphinx says 'build finished with problems', shows softer message"""
+        mock_run.side_effect = _make_called_process_error(
+            _SPHINX_STDOUT_WITH_WARNINGS, _SPHINX_STDERR_FINISHED_WITH_PROBLEMS
+        )
+        opts = _make_options(verbose=False)
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
+            "sys.stderr", new_callable=StringIO
+        ) as mock_stderr:
+            with self.assertRaises(SystemExit):
+                run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
+        combined = mock_stdout.getvalue() + mock_stderr.getvalue()
+        self.assertIn(_MSG_BUILD_COMPLETED_WITH_PROBLEMS, combined)
+        self.assertNotIn(_MSG_BUILD_FAILED, combined)
 
     @patch("subprocess.run")
     def test_failure_verbose_shows_full_output(self, mock_run):

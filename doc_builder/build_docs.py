@@ -210,6 +210,14 @@ def start_container_software(cmd):
     )
 
 
+_SPHINX_BUILD_FINISHED_WITH_PROBLEMS = "build finished with problems"
+
+_MSG_BUILD_FAILED = "Documentation build failed."
+_MSG_BUILD_COMPLETED_WITH_PROBLEMS = (
+    "Documentation build completed, but with problems that must be resolved."
+)
+
+
 def _report_build_failure(err, verbose):
     """Report a build failure to the user, filtering output based on verbosity.
 
@@ -225,7 +233,10 @@ def _report_build_failure(err, verbose):
         complaints = extract_sphinx_complaints(stdout_text, stderr_text)
         if complaints:
             sys.stderr.write("\n".join(complaints) + "\n")
-        sys.stderr.write("Documentation build failed.\n")
+        if _SPHINX_BUILD_FINISHED_WITH_PROBLEMS in stderr_text + stdout_text:
+            sys.stderr.write(_MSG_BUILD_COMPLETED_WITH_PROBLEMS + "\n")
+        else:
+            sys.stderr.write(_MSG_BUILD_FAILED + "\n")
         sys.stderr.write("Re-run with --verbose for full output.\n")
 
 
