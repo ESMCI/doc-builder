@@ -253,7 +253,10 @@ def run_build_command(build_command, version, options):
     verbose = options.verbose
 
     if not verbose:
-        print("Building documentation...")
+        if build_command[-1] == "clean":
+            print("Cleaning documentation build directory...")
+        else:
+            print("Building documentation...")
 
     env = os.environ.copy()
 
@@ -301,7 +304,7 @@ def run_build_command(build_command, version, options):
 
     _try_build_command(build_command, verbose, env)
 
-    print("Documentation build complete.")
+    print("Done.")
 
 
 def _try_build_command(build_command, verbose, env):
