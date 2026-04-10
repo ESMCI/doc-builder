@@ -299,26 +299,35 @@ def run_build_command(build_command, version, options):
     if verbose:
         print(" ".join(build_command))
 
+    _try_build_command(build_command, verbose, env)
+
+    print("Documentation build complete.")
+
+
+def _try_build_command(build_command, verbose, env):
+    """Try the docs build command, retrying via recursion if needed"""
     try:
         subprocess.run(build_command, env=env, check=True, capture_output=True)
     except subprocess.CalledProcessError as err:
         stderr_text = err.stderr.decode("utf-8", errors="replace")
+
+        # Unless we got this specific error message, exit.
         if "failed to chown recursively host path" not in stderr_text:
             _report_build_failure(err, verbose)
+            # We do sys.exit(1) instead of raise if we're not verbose so we don't see the whole
+            # Python traceback, which can distract from the ultimate source of the problem.
             if verbose:
                 raise
             sys.exit(1)
+
+        # If we made it here, we're going to change user mount and retry via recursion
         if verbose:
             print("Container failed due to missing subuid/subgid mappings.")
             print("Retrying without :U mount flag and with --user 0:0...")
-        else:
-            print("Retrying container build...")
         build_command = _fix_command_for_missing_subids(build_command)
         if verbose:
             print(" ".join(build_command))
-        subprocess.check_call(build_command, env=env)
-
-    print("Documentation build complete.")
+        _try_build_command(build_command, verbose, env)
 
 
 def _fix_command_for_missing_subids(build_command):
