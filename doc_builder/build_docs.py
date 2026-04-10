@@ -312,7 +312,7 @@ def run_build_command(build_command, version, options):
     print("Done.")
 
 
-def _try_build_command(build_command, verbose, env):
+def _try_build_command(build_command, verbose, env, allow_recursion=True):
     """Try the docs build command, retrying via recursion if needed"""
     try:
         result = subprocess.run(build_command, env=env, check=True, capture_output=True)
@@ -320,7 +320,7 @@ def _try_build_command(build_command, verbose, env):
         stderr_text = err.stderr.decode("utf-8", errors="replace")
 
         # Unless we got this specific error message, exit.
-        if "failed to chown recursively host path" not in stderr_text:
+        if "failed to chown recursively host path" not in stderr_text or not allow_recursion:
             _report_build_failure(err, verbose)
             # We do sys.exit(1) instead of raise if we're not verbose so we don't see the whole
             # Python traceback, which can distract from the ultimate source of the problem.
@@ -335,7 +335,7 @@ def _try_build_command(build_command, verbose, env):
         build_command = _fix_command_for_missing_subids(build_command)
         if verbose:
             print(" ".join(build_command))
-        result = _try_build_command(build_command, verbose, env)
+        result = _try_build_command(build_command, verbose, env, allow_recursion=False)
     return result
 
 
