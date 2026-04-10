@@ -5,7 +5,7 @@
 import subprocess
 import unittest
 from argparse import Namespace
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # pylint: disable=import-error
 from doc_builder.build_docs import _fix_command_for_missing_subids, run_build_command
@@ -93,6 +93,7 @@ def _make_options():
         templates_path="_templates",
         versions=False,
         build_in_container=True,
+        verbose=True,
     )
 
 
@@ -100,18 +101,19 @@ def _make_options():
 class TestRunBuildCommandRetry(unittest.TestCase):
     """Test that run_build_command retries with fixed args on chown failure"""
 
-    @patch("doc_builder.build_docs.subprocess.check_call")
     @patch("doc_builder.build_docs.subprocess.run")
-    def test_retries_on_chown_error(self, mock_run, mock_check_call, _mock_start):
+    def test_retries_on_chown_error(self, mock_run, _mock_start):
         """On chown failure, should retry with :U removed and --user 0:0"""
         msg = b"Error: failed to chown recursively host path: lchown /some/path: invalid argument"
-        mock_run.side_effect = subprocess.CalledProcessError(
-            returncode=126,
-            cmd=_BASE_COMMAND,
-            output=b"",
-            stderr=msg,
-        )
-        mock_check_call.return_value = 0
+        mock_run.side_effect = [
+            subprocess.CalledProcessError(
+                returncode=126,
+                cmd=_BASE_COMMAND,
+                output=b"",
+                stderr=msg,
+            ),
+            MagicMock(returncode=0),  # second call succeeds
+        ]
 
         run_build_command(
             build_command=list(_BASE_COMMAND),
@@ -119,8 +121,8 @@ class TestRunBuildCommandRetry(unittest.TestCase):
             options=_make_options(),
         )
 
-        mock_check_call.assert_called_once()
-        retry_cmd = mock_check_call.call_args[0][0]
+        assert mock_run.call_count == 2
+        retry_cmd = mock_run.call_args_list[1][0][0]
         user_idx = retry_cmd.index("--user")
         self.assertEqual(retry_cmd[user_idx + 1], _FIXED_USER_STR)
         self.assertNotIn("/path/to/repo:/home/user/mounted_home:U", retry_cmd)

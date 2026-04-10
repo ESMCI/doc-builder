@@ -19,6 +19,7 @@ from doc_builder.build_commands import (
     DEFAULT_IMAGE,
 )
 from doc_builder.build_docs_shared_args import bd_dir_group, bd_parser
+from doc_builder.output_utils import extract_sphinx_complaints
 from doc_builder.sys_utils import is_mac
 
 
@@ -154,9 +155,17 @@ based on the version indicated by the current branch, is:
         help="Treat sphinx warnings as warnings, not errors.",
     )
 
+    parser.add_argument(
+        "-V",
+        "--verbose",
+        action="store_true",
+        help="Show full build output. Default shows only errors/warnings.",
+    )
+
     options = parser.parse_args(cmdline_args)
 
-    print(f"options: {options}")
+    if options.verbose:
+        print(f"options: {options}")
 
     if options.versions:
         if not options.site_root:
@@ -201,8 +210,54 @@ def start_container_software(cmd):
     )
 
 
+_SPHINX_BUILD_FINISHED_WITH_PROBLEMS = "build finished with problems"
+
+_MSG_BUILD_FAILED = "Documentation build failed."
+_MSG_BUILD_COMPLETED_WITH_PROBLEMS = (
+    "Documentation build completed, but with problems that must be resolved."
+)
+
+
+def _report_build_failure(err, verbose):
+    """Report a build failure to the user, filtering output based on verbosity.
+
+    In verbose mode, dumps full stdout and stderr. In non-verbose mode, shows
+    only Sphinx WARNING/ERROR lines plus a hint to re-run with --verbose.
+    """
+    stdout_text = err.stdout.decode("utf-8", errors="replace")
+    stderr_text = err.stderr.decode("utf-8", errors="replace")
+    if verbose:
+        sys.stdout.write(stdout_text)
+        sys.stderr.write(stderr_text)
+    else:
+        complaints = extract_sphinx_complaints(stdout_text, stderr_text)
+        if complaints:
+            sys.stderr.write("\n".join(complaints) + "\n")
+        if _SPHINX_BUILD_FINISHED_WITH_PROBLEMS in stderr_text + stdout_text:
+            sys.stderr.write(_MSG_BUILD_COMPLETED_WITH_PROBLEMS + "\n")
+        else:
+            sys.stderr.write(_MSG_BUILD_FAILED + "\n")
+        sys.stderr.write("Re-run with --verbose for full output.\n")
+
+
+def _maybe_start_container(build_command):
+    """Start container software/VM if the build command uses one."""
+    if "podman" in build_command:
+        start_container_software("podman machine start")
+    elif "docker" in build_command and is_mac():
+        start_container_software("docker desktop start")
+
+
 def run_build_command(build_command, version, options):
     """Echo and then run the given build command"""
+    verbose = options.verbose
+
+    if not verbose:
+        if build_command[-1] == "clean":
+            print("Cleaning documentation build directory...")
+        else:
+            print("Building documentation...")
+
     env = os.environ.copy()
 
     # Set version display name (in drop-down menu)
@@ -242,26 +297,50 @@ def run_build_command(build_command, version, options):
         options.build_in_container,
     )
 
-    # Start container software/VM
-    if "podman" in build_command:
-        start_container_software("podman machine start")
-    elif "docker" in build_command and is_mac():
-        start_container_software("docker desktop start")
+    _maybe_start_container(build_command)
 
-    print(" ".join(build_command))
+    if verbose:
+        print(" ".join(build_command))
+
+    result = _try_build_command(build_command, verbose, env)
+
+    # Print "The HTML pages are in ..." bit, which if we're not verbose is part of the suppressed
+    # stdout
+    if not verbose and build_command[-1] == "html":
+        result_lines = result.stdout.decode("utf-8").splitlines()
+        for line in result_lines:
+            if line.startswith("The HTML pages are in"):
+                print(line)
+                break
+
+    print("Done.")
+
+
+def _try_build_command(build_command, verbose, env, allow_recursion=True):
+    """Try the docs build command, retrying via recursion if needed"""
     try:
-        subprocess.run(build_command, env=env, check=True, capture_output=True)
+        result = subprocess.run(build_command, env=env, check=True, capture_output=True)
     except subprocess.CalledProcessError as err:
         stderr_text = err.stderr.decode("utf-8", errors="replace")
-        if "failed to chown recursively host path" not in stderr_text:
-            sys.stdout.write(err.stdout.decode("utf-8", errors="replace"))
-            sys.stderr.write(err.stderr.decode("utf-8", errors="replace"))
-            raise
-        print("Container failed due to missing subuid/subgid mappings.")
-        print("Retrying without :U mount flag and with --user 0:0...")
+
+        # Unless we got this specific error message, exit.
+        if "failed to chown recursively host path" not in stderr_text or not allow_recursion:
+            _report_build_failure(err, verbose)
+            # We do sys.exit(1) instead of raise if we're not verbose so we don't see the whole
+            # Python traceback, which can distract from the ultimate source of the problem.
+            if verbose:
+                raise
+            sys.exit(1)
+
+        # If we made it here, we're going to change user mount and retry via recursion
+        if verbose:
+            print("Container failed due to missing subuid/subgid mappings.")
+            print("Retrying without :U mount flag and with --user 0:0...")
         build_command = _fix_command_for_missing_subids(build_command)
-        print(" ".join(build_command))
-        subprocess.check_call(build_command, env=env)
+        if verbose:
+            print(" ".join(build_command))
+        result = _try_build_command(build_command, verbose, env, allow_recursion=False)
+    return result
 
 
 def _fix_command_for_missing_subids(build_command):
