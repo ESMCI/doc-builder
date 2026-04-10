@@ -186,10 +186,9 @@ class TestMaybeStartContainer(unittest.TestCase):
     @patch("doc_builder.build_docs.start_container_software")
     def test_no_output(self, _mock_start):
         """Container startup should not print anything"""
-        for verbose in (True, False):
-            with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
-                _maybe_start_container(["podman", "run", "image"])
-            self.assertEqual("", mock_stdout.getvalue())
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            _maybe_start_container(["podman", "run", "image"])
+        self.assertEqual("", mock_stdout.getvalue())
 
 
 if __name__ == "__main__":
