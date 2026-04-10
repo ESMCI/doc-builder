@@ -59,6 +59,15 @@ class TestRunBuildCommandOutput(unittest.TestCase):
     """Tests for run_build_command output in verbose vs. non-verbose mode"""
 
     @patch("subprocess.run")
+    def test_non_verbose_prints_building_message(self, mock_run):
+        """In non-verbose mode, prints 'Building documentation...' before building"""
+        mock_run.return_value = MagicMock(returncode=0)
+        opts = _make_options(verbose=False)
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
+        self.assertIn("Building documentation...", mock_stdout.getvalue())
+
+    @patch("subprocess.run")
     def test_success_non_verbose_prints_complete_message(self, mock_run):
         """On success in non-verbose mode, prints completion message"""
         mock_run.return_value = MagicMock(returncode=0)

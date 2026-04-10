@@ -255,6 +255,10 @@ def _maybe_start_container(build_command, verbose):
 def run_build_command(build_command, version, options):
     """Echo and then run the given build command"""
     verbose = options.verbose
+
+    if not verbose:
+        print("Building documentation...")
+
     env = os.environ.copy()
 
     # Set version display name (in drop-down menu)
