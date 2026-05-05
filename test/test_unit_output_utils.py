@@ -43,9 +43,9 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         self.assertEqual(extract_sphinx_complaints(output), [_WARNING_WITH_LOCATION])
 
     def test_warning_without_location(self):
-        """Captures WARNING lines without file:line prefix"""
+        """Does *not* capture WARNING lines without file:line prefix"""
         output = "\n".join(_NORMAL_LINES + [_WARNING_WITHOUT_LOCATION])
-        self.assertEqual(extract_sphinx_complaints(output), [_WARNING_WITHOUT_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [])
 
     def test_error_with_location(self):
         """Captures ERROR lines with file:line prefix"""
@@ -53,9 +53,9 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         self.assertEqual(extract_sphinx_complaints(output), [_ERROR_WITH_LOCATION])
 
     def test_error_without_location(self):
-        """Captures ERROR lines without file:line prefix"""
+        """Does *not* capture ERROR lines without file:line prefix"""
         output = "\n".join(_NORMAL_LINES + [_ERROR_WITHOUT_LOCATION])
-        self.assertEqual(extract_sphinx_complaints(output), [_ERROR_WITHOUT_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [])
 
     def test_critical_with_location(self):
         """Captures CRITICAL lines with file:line prefix"""
@@ -81,16 +81,15 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         expected = [
             _WARNING_WITH_LOCATION,
             _ERROR_WITH_LOCATION,
-            _WARNING_WITHOUT_LOCATION,
         ]
         self.assertEqual(extract_sphinx_complaints(output), expected)
 
     def test_combines_stdout_and_stderr(self):
         """When given two strings, extracts from both in order"""
         stdout = "\n".join([_NORMAL_LINES[0], _WARNING_WITH_LOCATION])
-        stderr = "\n".join([_ERROR_WITHOUT_LOCATION, _NORMAL_LINES[1]])
+        stderr = "\n".join([_ERROR_WITH_LOCATION, _NORMAL_LINES[1]])
         result = extract_sphinx_complaints(stdout, stderr)
-        self.assertEqual(result, [_WARNING_WITH_LOCATION, _ERROR_WITHOUT_LOCATION])
+        self.assertEqual(result, [_WARNING_WITH_LOCATION, _ERROR_WITH_LOCATION])
 
     def test_zero_arguments(self):
         """Calling with zero arguments returns empty list"""
