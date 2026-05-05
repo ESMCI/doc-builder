@@ -10,7 +10,9 @@ from doc_builder.output_utils import extract_sphinx_complaints  # pylint: disabl
 _WARNING_WITH_LOCATION = (
     "/path/to/file.rst:42: WARNING: toctree contains reference to nonexisting document 'missing'"
 )
+_CRITICAL_WITH_LOCATION = "/path/to/file.rst:42: CRITICAL: Duplicate ID: 'equation-n-cost-fix'"
 _WARNING_WITHOUT_LOCATION = "WARNING: unknown config value 'foo'"
+_CRITICAL_WITHOUT_LOCATION = "CRITICAL: Duplicate ID: 'equation-n-cost-fix'"
 _ERROR_WITH_LOCATION = "/path/to/file.rst:10: ERROR: unknown directive type 'bogus'"
 _ERROR_WITHOUT_LOCATION = "ERROR: master file not found"
 
@@ -41,9 +43,9 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         self.assertEqual(extract_sphinx_complaints(output), [_WARNING_WITH_LOCATION])
 
     def test_warning_without_location(self):
-        """Captures WARNING lines without file:line prefix"""
+        """Does *not* capture WARNING lines without file:line prefix"""
         output = "\n".join(_NORMAL_LINES + [_WARNING_WITHOUT_LOCATION])
-        self.assertEqual(extract_sphinx_complaints(output), [_WARNING_WITHOUT_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [])
 
     def test_error_with_location(self):
         """Captures ERROR lines with file:line prefix"""
@@ -51,9 +53,19 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         self.assertEqual(extract_sphinx_complaints(output), [_ERROR_WITH_LOCATION])
 
     def test_error_without_location(self):
-        """Captures ERROR lines without file:line prefix"""
+        """Does *not* capture ERROR lines without file:line prefix"""
         output = "\n".join(_NORMAL_LINES + [_ERROR_WITHOUT_LOCATION])
-        self.assertEqual(extract_sphinx_complaints(output), [_ERROR_WITHOUT_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [])
+
+    def test_critical_with_location(self):
+        """Captures CRITICAL lines with file:line prefix"""
+        output = "\n".join(_NORMAL_LINES + [_CRITICAL_WITH_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [_CRITICAL_WITH_LOCATION])
+
+    def test_critical_without_location(self):
+        """Does *not* capture CRITICAL lines without file:line prefix"""
+        output = "\n".join(_NORMAL_LINES + [_CRITICAL_WITHOUT_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [])
 
     def test_multiple_complaints(self):
         """Extracts multiple complaint lines in order"""
@@ -69,16 +81,15 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         expected = [
             _WARNING_WITH_LOCATION,
             _ERROR_WITH_LOCATION,
-            _WARNING_WITHOUT_LOCATION,
         ]
         self.assertEqual(extract_sphinx_complaints(output), expected)
 
     def test_combines_stdout_and_stderr(self):
         """When given two strings, extracts from both in order"""
         stdout = "\n".join([_NORMAL_LINES[0], _WARNING_WITH_LOCATION])
-        stderr = "\n".join([_ERROR_WITHOUT_LOCATION, _NORMAL_LINES[1]])
+        stderr = "\n".join([_ERROR_WITH_LOCATION, _NORMAL_LINES[1]])
         result = extract_sphinx_complaints(stdout, stderr)
-        self.assertEqual(result, [_WARNING_WITH_LOCATION, _ERROR_WITHOUT_LOCATION])
+        self.assertEqual(result, [_WARNING_WITH_LOCATION, _ERROR_WITH_LOCATION])
 
     def test_zero_arguments(self):
         """Calling with zero arguments returns empty list"""

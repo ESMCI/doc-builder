@@ -2,7 +2,9 @@
 
 import re
 
-_SPHINX_COMPLAINT_PATTERN = re.compile(r"^.*(?:WARNING|ERROR).*$", re.MULTILINE)
+# Requiring at least one character before the keyword prevents the "WARNING: image platform ...
+# does not match the expected platform ..." message from matching.
+_SPHINX_COMPLAINT_PATTERN = re.compile(r"^.+(?:WARNING|ERROR|CRITICAL).*$", re.MULTILINE)
 
 
 def extract_sphinx_complaints(*outputs):

@@ -37,7 +37,7 @@ _SPHINX_STDOUT_WITH_WARNINGS = (
     "writing output... [100%] index\n"
     "WARNING: unknown config value 'bogus'\n"
 )
-_SPHINX_STDERR_WITH_ERROR = "ERROR: master file not found\n"
+_SPHINX_STDERR_WITH_ERROR = "/path/to/file.rst:42: ERROR: master file not found\n"
 _SPHINX_STDERR_FINISHED_WITH_PROBLEMS = (
     "WARNING: unknown config value 'bogus'\n" + _SPHINX_BUILD_FINISHED_WITH_PROBLEMS + "\n"
 )
@@ -109,7 +109,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
         self.assertIn("WARNING: toctree contains reference", combined)
-        self.assertIn("WARNING: unknown config value", combined)
+        self.assertNotIn("WARNING: unknown config value", combined)  # Because WARNING at line start
         self.assertIn("ERROR: master file not found", combined)
         # Should NOT contain normal Sphinx noise
         self.assertNotIn("Running Sphinx", combined)
