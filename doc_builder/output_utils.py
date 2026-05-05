@@ -2,7 +2,7 @@
 
 import re
 
-_SPHINX_COMPLAINT_PATTERN = re.compile(r"^.*(?:WARNING|ERROR).*$", re.MULTILINE)
+_SPHINX_COMPLAINT_PATTERN = re.compile(r"^.*(?:WARNING|ERROR|CRITICAL).*$", re.MULTILINE)
 
 
 def extract_sphinx_complaints(*outputs):

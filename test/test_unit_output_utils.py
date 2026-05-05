@@ -10,7 +10,9 @@ from doc_builder.output_utils import extract_sphinx_complaints  # pylint: disabl
 _WARNING_WITH_LOCATION = (
     "/path/to/file.rst:42: WARNING: toctree contains reference to nonexisting document 'missing'"
 )
+_CRITICAL_WITH_LOCATION = "/path/to/file.rst:42: CRITICAL: Duplicate ID: 'equation-n-cost-fix'"
 _WARNING_WITHOUT_LOCATION = "WARNING: unknown config value 'foo'"
+_CRITICAL_WITHOUT_LOCATION = "CRITICAL: Duplicate ID: 'equation-n-cost-fix'"
 _ERROR_WITH_LOCATION = "/path/to/file.rst:10: ERROR: unknown directive type 'bogus'"
 _ERROR_WITHOUT_LOCATION = "ERROR: master file not found"
 
@@ -54,6 +56,16 @@ class TestExtractSphinxComplaints(unittest.TestCase):
         """Captures ERROR lines without file:line prefix"""
         output = "\n".join(_NORMAL_LINES + [_ERROR_WITHOUT_LOCATION])
         self.assertEqual(extract_sphinx_complaints(output), [_ERROR_WITHOUT_LOCATION])
+
+    def test_critical_with_location(self):
+        """Captures CRITICAL lines with file:line prefix"""
+        output = "\n".join(_NORMAL_LINES + [_CRITICAL_WITH_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [_CRITICAL_WITH_LOCATION])
+
+    def test_critical_without_location(self):
+        """Does *not* capture CRITICAL lines without file:line prefix"""
+        output = "\n".join(_NORMAL_LINES + [_CRITICAL_WITHOUT_LOCATION])
+        self.assertEqual(extract_sphinx_complaints(output), [])
 
     def test_multiple_complaints(self):
         """Extracts multiple complaint lines in order"""
