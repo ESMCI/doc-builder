@@ -15,3 +15,18 @@
     /* Place link in margin and keep equation number aligned with boundary */
     margin-right: -0.7em;
 }
+.table-caption-external {
+    text-align: left;
+    font-style: italic;
+    margin-bottom: 0.5em;
+    /* ordinary block — caps at content width, never enters the scroll region */
+}
+.table-caption-external .headerlink {
+    visibility: hidden;
+    margin-left: 0.3em;
+    text-decoration: none;
+    font-family: FontAwesome;
+}
+.table-caption-external:hover .headerlink {
+    visibility: visible;
+}
