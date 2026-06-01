@@ -21,3 +21,12 @@
     margin-bottom: 0.5em;
     /* ordinary block — caps at content width, never enters the scroll region */
 }
+.table-caption-external .headerlink {
+    visibility: hidden;
+    margin-left: 0.3em;
+    text-decoration: none;
+    font-family: FontAwesome;
+}
+.table-caption-external:hover .headerlink {
+    visibility: visible;
+}
