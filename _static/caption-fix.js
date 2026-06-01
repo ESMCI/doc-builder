@@ -1,7 +1,9 @@
 (function () {
     function moveCaptions() {
         document.querySelectorAll("table").forEach(function (table) {
-            var caption = table.querySelector("caption");
+            var caption = Array.prototype.find.call(table.children, function (c) {
+                return c.tagName === "CAPTION";
+            });
             if (!caption) return;
             // insert above the wrapper if one exists, else above the table itself
             var target = table.closest(".wy-table-responsive") || table;
