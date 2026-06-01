@@ -1,6 +1,6 @@
 (function () {
     function moveCaptions() {
-        document.querySelectorAll("table.left-caption").forEach(function (table) {
+        document.querySelectorAll("table").forEach(function (table) {
             var caption = table.querySelector("caption");
             if (!caption) return;
             // insert above the wrapper if one exists, else above the table itself
