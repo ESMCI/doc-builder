@@ -57,6 +57,12 @@ def bd_parser(parser, site_root_required=False):
         help="Path to _templates/. If relative, must be relative to conf.py.",
         default="_templates",
     )
+    parser.add_argument(
+        "-V",
+        "--verbose",
+        action="store_true",
+        help="Show full build output. Default shows only errors/warnings.",
+    )
     return parser
 
 
