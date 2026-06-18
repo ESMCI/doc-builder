@@ -28,10 +28,10 @@ def bd_parser(parser, site_root_required=False):
         "rather than relying on locally-installed versions of Sphinx, etc.\n"
         "This checks that a compatible container tool is installed and running on your system.\n"
         "\n"
-        "NOTE: This mounts your CTSM checkout in the container.\n"
+        "NOTE: This mounts your repo checkout in the container.\n"
         "Therefore, both the current directory (containing the Makefile for\n"
         "building the documentation) and the documentation build directory\n"
-        "must reside somewhere within your CTSM checkout."
+        "must reside somewhere within your repo checkout."
         "\n"
         f"Default image: {DEFAULT_IMAGE}\n"
         "This can be changed with -i/--container-image.",
@@ -56,6 +56,12 @@ def bd_parser(parser, site_root_required=False):
         "--templates-path",
         help="Path to _templates/. If relative, must be relative to conf.py.",
         default="_templates",
+    )
+    parser.add_argument(
+        "-V",
+        "--verbose",
+        action="store_true",
+        help="Show full build output. Default shows only errors/warnings.",
     )
     return parser
 
