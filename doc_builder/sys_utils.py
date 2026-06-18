@@ -42,7 +42,7 @@ def get_git_head_or_branch():
     """
     try:
         result = subprocess.run(
-            ["git", "symbolic-ref", "--short", "-q", "HEAD"],
+            ["git", "-c", "safe.directory=*", "symbolic-ref", "--short", "-q", "HEAD"],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
@@ -55,7 +55,7 @@ def get_git_head_or_branch():
     if not output:
         # Fallback to commit SHA
         result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
+            ["git", "-c", "safe.directory=*", "rev-parse", "HEAD"],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             text=True,
@@ -104,9 +104,13 @@ def get_toplevel_git_dir(file_or_dir):
 
 
 def get_toplevel_of_doc_builder_parent():
-    """Get the top level of the repo of which doc-builder is a submodule"""
+    """Get the top level of the repo of which doc-builder is a part"""
     topdir_doc_builder = get_toplevel_git_dir(__file__)
     topdir_parent = get_toplevel_git_dir(os.path.join(topdir_doc_builder, os.pardir))
+
+    # Necessary if doc-builder isn't a submodule
+    if topdir_parent is None:
+        topdir_parent = topdir_doc_builder
     return topdir_parent
 
 
