@@ -25,7 +25,7 @@ To test, you can tell `build_docs` to use your new version by adding `--containe
 
 ## Publishing automatically
 
-The `docker-image-build-publish.yml` workflow makes it so that new versions of the workflow will be published to the GitHub Container Registry whenever changes to the container setup are merged to ESMCI/doc-builder's `main` branch. This will fail (as will a similar, no-publish workflow that happens on PRs) unless you specify exactly one new version number in the Dockerfile. This version number will be used as a tag that can be referenced by, e.g., doc-builder.
+The `docker-image-build-publish.yml` workflow makes it so that new versions of the workflow will be published to the GitHub Container Registry whenever changes to the container setup are merged to ESMCI/doc-builder's `master` branch. This will fail (as will a similar, no-publish workflow that happens on PRs) unless you specify exactly one new version number in the Dockerfile. This version number will be used as a tag that can be referenced by, e.g., doc-builder.
 
 Lots of container instructions tell you to use the `latest` tag, and indeed the workflow will add that tag automatically. However, actually _using_ `latest` can lead to support headaches as users think they have the right version but actually don't. Instead, you'll make a new version number incremented from the [previous one](https://github.com/ESMCI/doc-builder/pkgs/container/doc-builder/doc-build-container/versions), in the `vX.Y.Z` format.
 
