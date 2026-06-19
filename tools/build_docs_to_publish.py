@@ -127,6 +127,8 @@ def checkout_and_build(version, permanent_files, args):
         build_args += ["--templates-path", args.templates_path]
     if args.container_cli_tool:
         build_args += ["--container-cli-tool", args.container_cli_tool]
+    if args.verbose:
+        build_args.append("--verbose")
     print(" ".join(build_args))
     build_docs(build_args)
 
