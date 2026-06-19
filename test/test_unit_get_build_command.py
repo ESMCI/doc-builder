@@ -53,9 +53,8 @@ class TestGetBuildCommand():
         ]
         assert expected == build_command
 
-    def test_custom_conf_py_path(self):
+    def test_custom_conf_py_path(self, conf_py_path):
         """Tests usage with --conf-py-path as file"""
-        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/foo",
             run_from_dir="/irrelevant/path",
@@ -112,10 +111,9 @@ class TestGetBuildCommand():
         assert expected == build_command
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
-    def test_container(self, mock_get_toplevel_of_doc_builder_parent):
+    def test_container(self, mock_get_toplevel_of_doc_builder_parent, conf_py_path):
         """Tests usage with container"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
-        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/username/foorepos/foodocs/versions/main",
             run_from_dir="/path/to/username/foorepos/foocode/doc",
@@ -193,10 +191,9 @@ class TestGetBuildCommand():
         assert expected == build_command
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
-    def test_container_no_clitool_given(self, mock_get_toplevel_of_doc_builder_parent):
+    def test_container_no_clitool_given(self, mock_get_toplevel_of_doc_builder_parent, conf_py_path):
         """Tests usage with container"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
-        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/username/foorepos/foodocs/versions/main",
             run_from_dir="/path/to/username/foorepos/foocode/doc",
