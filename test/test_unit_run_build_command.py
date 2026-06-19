@@ -3,7 +3,6 @@
 """Unit tests for run_build_command output behavior"""
 
 import subprocess
-import unittest
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 from io import StringIO
@@ -15,6 +14,8 @@ from doc_builder.build_docs import (  # pylint: disable=import-error
     _MSG_BUILD_COMPLETED_WITH_PROBLEMS,
     _SPHINX_BUILD_FINISHED_WITH_PROBLEMS,
 )
+
+import pytest
 
 
 # A minimal options object for testing (non-container)
@@ -56,7 +57,7 @@ def _make_called_process_error(stdout_text, stderr_text):
     return err
 
 
-class TestRunBuildCommandOutput(unittest.TestCase):
+class TestRunBuildCommandOutput():
     """Tests for run_build_command output in verbose vs. non-verbose mode"""
 
     @patch("subprocess.run")
@@ -66,7 +67,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         opts = _make_options(verbose=False)
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
-        self.assertIn("Building documentation...", mock_stdout.getvalue())
+        assert "Building documentation..." in mock_stdout.getvalue()
 
     @patch("subprocess.run")
     def test_success_non_verbose_prints_complete_message(self, mock_run):
@@ -75,7 +76,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         opts = _make_options(verbose=False)
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
-        self.assertIn("Done.", mock_stdout.getvalue())
+        assert "Done." in mock_stdout.getvalue()
 
     @patch("subprocess.run")
     def test_success_non_verbose_no_command_echo(self, mock_run):
@@ -84,7 +85,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         opts = _make_options(verbose=False)
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
-        self.assertNotIn("make", mock_stdout.getvalue())
+        assert "make" not in mock_stdout.getvalue()
 
     @patch("subprocess.run")
     def test_success_verbose_echoes_command(self, mock_run):
@@ -93,7 +94,7 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         opts = _make_options(verbose=True)
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
-        self.assertIn("make", mock_stdout.getvalue())
+        assert "make" in mock_stdout.getvalue()
 
     @patch("subprocess.run")
     def test_failure_non_verbose_shows_only_complaints(self, mock_run):
@@ -105,15 +106,15 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
-        self.assertIn("WARNING: toctree contains reference", combined)
-        self.assertNotIn("WARNING: unknown config value", combined)  # Because WARNING at line start
-        self.assertIn("ERROR: master file not found", combined)
+        assert "WARNING: toctree contains reference" in combined
+        assert "WARNING: unknown config value" not in combined  # Because WARNING at line start
+        assert "ERROR: master file not found" in combined
         # Should NOT contain normal Sphinx noise
-        self.assertNotIn("Running Sphinx", combined)
-        self.assertNotIn("building [html]", combined)
+        assert "Running Sphinx" not in combined
+        assert "building [html]" not in combined
 
     @patch("subprocess.run")
     def test_failure_non_verbose_shows_hint(self, mock_run):
@@ -125,10 +126,10 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
-        self.assertIn("--verbose", combined)
+        assert "--verbose" in combined
 
     @patch("subprocess.run")
     def test_failure_non_verbose_shows_failed_message(self, mock_run):
@@ -140,11 +141,11 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
-        self.assertIn(_MSG_BUILD_FAILED, combined)
-        self.assertNotIn(_MSG_BUILD_COMPLETED_WITH_PROBLEMS, combined)
+        assert _MSG_BUILD_FAILED in combined
+        assert _MSG_BUILD_COMPLETED_WITH_PROBLEMS not in combined
 
     @patch("subprocess.run")
     def test_failure_non_verbose_finished_with_problems(self, mock_run):
@@ -156,11 +157,11 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(SystemExit):
+            with pytest.raises(SystemExit):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
-        self.assertIn(_MSG_BUILD_COMPLETED_WITH_PROBLEMS, combined)
-        self.assertNotIn(_MSG_BUILD_FAILED, combined)
+        assert _MSG_BUILD_COMPLETED_WITH_PROBLEMS in combined
+        assert _MSG_BUILD_FAILED not in combined
 
     @patch("subprocess.run")
     def test_failure_verbose_shows_full_output(self, mock_run):
@@ -172,24 +173,21 @@ class TestRunBuildCommandOutput(unittest.TestCase):
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout, patch(
             "sys.stderr", new_callable=StringIO
         ) as mock_stderr:
-            with self.assertRaises(subprocess.CalledProcessError):
+            with pytest.raises(subprocess.CalledProcessError):
                 run_build_command(_FAKE_COMMAND, _FAKE_VERSION, opts)
         combined = mock_stdout.getvalue() + mock_stderr.getvalue()
         # Verbose mode shows everything including normal lines
-        self.assertIn("Running Sphinx", combined)
-        self.assertIn("building [html]", combined)
+        assert "Running Sphinx" in combined
+        assert "building [html]" in combined
 
 
-class TestMaybeStartContainer(unittest.TestCase):
+class TestMaybeStartContainer():
     """Tests for _maybe_start_container output"""
+    # pylint: disable=too-few-public-methods
 
     @patch("doc_builder.build_docs.start_container_software")
     def test_no_output(self, _mock_start):
         """Container startup should not print anything"""
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             _maybe_start_container(["podman", "run", "image"])
-        self.assertEqual("", mock_stdout.getvalue())
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert "" == mock_stdout.getvalue()

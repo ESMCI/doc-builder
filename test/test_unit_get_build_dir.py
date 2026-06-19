@@ -3,7 +3,6 @@
 """Unit test driver for get_build_dir function"""
 
 import shutil
-import unittest
 
 try:
     # For python2; needs pip install mock
@@ -13,29 +12,31 @@ except ImportError:
     from unittest import mock
 import os
 
-# pylint: disable=import-error,no-name-in-module
+# pylint: disable=import-error,no-name-in-module,attribute-defined-outside-init
 from test.test_utils.sys_utils_fake import (
     make_fake_isdir,
 )
 from doc_builder.build_commands import get_build_dir
 
+import pytest
 
-class TestGetBuildDir(unittest.TestCase):
+
+class TestGetBuildDir():
     """Test the get_build_dir function"""
 
     # Allow long method names
     # pylint: disable=invalid-name
 
-    def setUp(self):
-        """Run this before each test"""
+    def setup_method(self):
+        """To run at the beginning of each test"""
 
         self.path_to_foo = os.path.join("path", "to", "foo")
         self.path_to_repo = os.path.join("path", "to", "repo")
         self.path_to_parent = os.path.join("path", "to", "parent")
         self.path_to_parent_repo = os.path.join(self.path_to_parent, "repo")
 
-    def tearDown(self):
-        """Run this after each test, whether it succeeded or failed"""
+    def teardown_method(self):
+        """To run after each test"""
         test_dir_list = [
             self.path_to_foo,
             self.path_to_repo,
@@ -51,21 +52,21 @@ class TestGetBuildDir(unittest.TestCase):
         build_path = self.path_to_foo
         build_dir = get_build_dir(build_dir=build_path, repo_root=None, version=None)
         expected = (build_path, "None")
-        self.assertEqual(expected, build_dir)
+        assert expected == build_dir
 
     def test_builddir_and_reporoot(self):
         """If given both build_dir and repo_root, should raise an exception"""
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             _ = get_build_dir(build_dir=self.path_to_foo, repo_root=self.path_to_repo, version=None)
 
     def test_builddir_and_version(self):
         """If given both build_dir and version, should raise an exception"""
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             _ = get_build_dir(build_dir=self.path_to_foo, repo_root=None, version="v1.0")
 
     def test_no_builddir_or_reporoot(self):
         """If given neither build_dir nor repo_root, should raise an exception"""
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             _ = get_build_dir(build_dir=None, repo_root=None, version=None)
 
     def test_reporoot_and_version(self):
@@ -78,7 +79,7 @@ class TestGetBuildDir(unittest.TestCase):
             mock_isdir.side_effect = make_fake_isdir(dirs_exist=[path_to_repo_versions])
             build_dir = get_build_dir(build_dir=None, repo_root=self.path_to_repo, version=ver)
         expected = (os.path.join(path_to_repo_versions, ver), ver)
-        self.assertEqual(expected, build_dir)
+        assert expected == build_dir
 
     def test_reporoot_and_version_dir_not_exist(self):
         """
@@ -102,14 +103,14 @@ class TestGetBuildDir(unittest.TestCase):
                 )
                 build_dir = get_build_dir(build_dir=None, repo_root=path_to_repo, version=None)
 
-        self.assertEqual(expected, build_dir)
+        assert expected == build_dir
 
     def test_reporoot_no_version_git_branch_problem(self):
         """If given repo_root but no version, with a problem getting git
         branch, should raise an exception."""
         with mock.patch("doc_builder.sys_utils.git_current_branch") as mock_git_current_branch:
             mock_git_current_branch.return_value = (False, "")
-            with self.assertRaises(RuntimeError):
+            with pytest.raises(RuntimeError):
                 _ = get_build_dir(build_dir=None, repo_root=self.path_to_repo, version=None)
 
     def test_reporoot_no_version_dir_not_exist(self):
@@ -122,9 +123,5 @@ class TestGetBuildDir(unittest.TestCase):
                 path_to_repo_versions = os.path.join(path_to_repo, "versions")
                 # /path/to/repo exists, but /path/to/repo/release-v2.0 does not
                 mock_isdir.side_effect = make_fake_isdir(dirs_exist=[path_to_repo_versions])
-                with self.assertRaises(RuntimeError):
+                with pytest.raises(RuntimeError):
                     _ = get_build_dir(build_dir=None, repo_root=path_to_repo, version=None)
-
-
-if __name__ == "__main__":
-    unittest.main()

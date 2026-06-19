@@ -3,12 +3,11 @@
 High-level system tests of the whole build_docs
 """
 
-import unittest
 import tempfile
 import shutil
 import os
 
-# pylint: disable=import-error,no-name-in-module
+# pylint: disable=import-error,no-name-in-module,attribute-defined-outside-init
 from test.test_utils.git_helpers import (
     make_git_repo,
     add_git_commit,
@@ -17,7 +16,7 @@ from test.test_utils.git_helpers import (
 from doc_builder import build_docs
 
 
-class TestBuildDocs(unittest.TestCase):
+class TestBuildDocs:
     """High-level system tests of build_docs"""
 
     # Allow long method names
@@ -27,7 +26,7 @@ class TestBuildDocs(unittest.TestCase):
     # Helper methods
     # ------------------------------------------------------------------------
 
-    def setUp(self):
+    def setup_method(self):
         """Set up temporary source and repo-root directories, and chdir to
         the source directory"""
         self._return_dir = os.getcwd()
@@ -37,7 +36,8 @@ class TestBuildDocs(unittest.TestCase):
         os.makedirs(self._build_versions_dir)
         os.chdir(self._sourcedir)
 
-    def tearDown(self):
+    def teardown_method(self):
+        """To run after each test"""
         os.chdir(self._return_dir)
         shutil.rmtree(self._sourcedir, ignore_errors=True)
         shutil.rmtree(self._build_reporoot, ignore_errors=True)
@@ -67,7 +67,7 @@ html:
         with open(filepath, "r", encoding="utf-8") as myfile:
             contents = myfile.read()
 
-        self.assertEqual(expected, contents, msg=msg)
+        assert expected == contents, msg
 
     # ------------------------------------------------------------------------
     # Begin tests
@@ -110,7 +110,3 @@ html:
         self.assert_file_contents_equal(
             expected="hello world\n", filepath=os.path.join(build_path2, "testfile")
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
