@@ -3,12 +3,12 @@ set -e
 
 if [ ! -e doc-builder ]; then
     # We're in the doc-builder directory itself
-    script="./tools/build_docs.py"
+    script="./tools/build_docs_to_publish.py"
     files_to_copy_to_source="conf.py substitutions.py _templates _static"
     cp -a ${files_to_copy_to_source} source/
 else
     # We're in a repo that has doc-builder as a submodule
-    script="./doc-builder/tools/build_docs.py"
+    script="./doc-builder/tools/build_docs_to_publish.py"
 
     # Make sure the submodule is checked out. For now, we assume the repo is using git-fleximod to
     # manage submodules.

@@ -14,7 +14,12 @@ import os
 import subprocess
 import argparse
 
-# pylint: disable=import-error,no-name-in-module
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir))
+
+DOC_BUILDER_IS_SUBMODULE = os.path.exists("doc-builder")
+
+
+# pylint: disable=import-error,no-name-in-module,wrong-import-position
 from doc_builder.build_docs import (
     main as build_docs,
 )
@@ -64,12 +69,13 @@ def setup_this_ref(args):
     # the permanent_files list.
     permanent_files = [
         VERSIONS_PY,
-        "doc-builder",
         MAKEFILE,
         args.conf_py_path,
         get_static_templates_path_relative_to_here(args, args.templates_path),
         get_static_templates_path_relative_to_here(args, args.static_path),
     ]
+    if DOC_BUILDER_IS_SUBMODULE:
+        permanent_files.append("doc-builder")
 
     # Check some things about "permanent" files before checkout
     for filename in permanent_files:
@@ -131,20 +137,22 @@ def reset_git(orig_ref):
     """
     # 1. Get the current ref's version of doc-builder to avoid "would be overwritten by checkout"
     #    errors.
-    cmd = "git submodule update --checkout doc-builder".split(" ")
-    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
-    # If doc-builder not tracked by git, that's fine. Otherwise error.
-    if result.returncode and "did not match any file(s) known to git" not in result.stderr:
-        print("PWD: " + os.getcwd())
-        print(result.stdout)
-        print(result.stderr)
-        raise subprocess.CalledProcessError(result.returncode, cmd)
+    if DOC_BUILDER_IS_SUBMODULE:
+        cmd = "git submodule update --checkout doc-builder".split(" ")
+        result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        # If doc-builder not tracked by git, that's fine. Otherwise error.
+        if result.returncode and "did not match any file(s) known to git" not in result.stderr:
+            print("PWD: " + os.getcwd())
+            print(result.stdout)
+            print(result.stderr)
+            raise subprocess.CalledProcessError(result.returncode, cmd)
 
     # 2. Check out the original git ref (branch or commit SHA)
     subprocess.check_output("git checkout " + orig_ref, shell=True)
 
     # 3. Restore the current version's doc-builder
-    subprocess.check_output("git submodule update --checkout doc-builder", shell=True)
+    if DOC_BUILDER_IS_SUBMODULE:
+        subprocess.check_output("git submodule update --checkout doc-builder", shell=True)
 
 
 def check_version_list():
