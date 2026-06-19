@@ -24,7 +24,7 @@ _NORMAL_LINES = [
 ]
 
 
-class TestExtractSphinxComplaints():
+class TestExtractSphinxComplaints:
     """Tests for extract_sphinx_complaints"""
 
     def test_empty_input(self):

@@ -48,7 +48,7 @@ for x in _BASE_COMMAND:
         _FIXED_COMMAND.append(x)
 
 
-class TestFixCommandForMissingSubids():
+class TestFixCommandForMissingSubids:
     """Test the _fix_command_for_missing_subids function"""
 
     def setup_method(self):
@@ -100,7 +100,7 @@ def _make_options():
 
 
 @patch("doc_builder.build_docs.start_container_software")
-class TestRunBuildCommandRetry():
+class TestRunBuildCommandRetry:
     """Test that run_build_command retries with fixed args on chown failure"""
 
     @patch("doc_builder.build_docs.subprocess.run")

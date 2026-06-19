@@ -20,7 +20,7 @@ from test.test_utils.git_helpers import (
 from doc_builder.sys_utils import git_current_branch
 
 
-class TestGitCurrentBranch():
+class TestGitCurrentBranch:
     """Test the git_current_branch function"""
 
     # ------------------------------------------------------------------------

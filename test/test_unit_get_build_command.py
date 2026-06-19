@@ -22,7 +22,7 @@ import pytest
 # pylint: disable=line-too-long
 
 
-class TestGetBuildCommand():
+class TestGetBuildCommand:
     """Test the get_build_command function"""
 
     def setup_method(self):
@@ -191,7 +191,9 @@ class TestGetBuildCommand():
         assert expected == build_command
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
-    def test_container_no_clitool_given(self, mock_get_toplevel_of_doc_builder_parent, conf_py_path):
+    def test_container_no_clitool_given(
+        self, mock_get_toplevel_of_doc_builder_parent, conf_py_path
+    ):
         """Tests usage with container"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
         build_command = get_build_command(

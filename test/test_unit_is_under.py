@@ -13,7 +13,7 @@ import os
 from doc_builder.sys_utils import is_under
 
 
-class TestIsUnder():
+class TestIsUnder:
     """Test the is_under function"""
 
     # ------------------------------------------------------------------------

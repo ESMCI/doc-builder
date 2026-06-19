@@ -27,7 +27,7 @@ import pytest
 SHA_PATTERN = re.compile("^[0-9a-f]{40}")
 
 
-class TestGetGitHeadOrBranch():
+class TestGetGitHeadOrBranch:
     """Test the get_git_head_or_branch function"""
 
     # ------------------------------------------------------------------------

@@ -57,7 +57,7 @@ def _make_called_process_error(stdout_text, stderr_text):
     return err
 
 
-class TestRunBuildCommandOutput():
+class TestRunBuildCommandOutput:
     """Tests for run_build_command output in verbose vs. non-verbose mode"""
 
     @patch("subprocess.run")
@@ -181,8 +181,9 @@ class TestRunBuildCommandOutput():
         assert "building [html]" in combined
 
 
-class TestMaybeStartContainer():
+class TestMaybeStartContainer:
     """Tests for _maybe_start_container output"""
+
     # pylint: disable=too-few-public-methods
 
     @patch("doc_builder.build_docs.start_container_software")

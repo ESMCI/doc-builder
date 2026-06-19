@@ -17,7 +17,7 @@ from test.test_utils.git_helpers import (
 from doc_builder.sys_utils import get_toplevel_git_dir
 
 
-class TestGetToplevelGitDir():
+class TestGetToplevelGitDir:
     """Test the get_toplevel_git_dir function"""
 
     # ------------------------------------------------------------------------

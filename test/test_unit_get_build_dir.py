@@ -16,7 +16,7 @@ from doc_builder.build_commands import get_build_dir
 import pytest
 
 
-class TestGetBuildDir():
+class TestGetBuildDir:
     """Test the get_build_dir function"""
 
     # Allow long method names

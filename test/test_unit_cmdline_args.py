@@ -9,7 +9,7 @@ from doc_builder.build_docs import is_web_url, commandline_options  # pylint: di
 import pytest
 
 
-class TestCmdlineArgs():
+class TestCmdlineArgs:
     """Test the command-line arguments and parsing"""
 
     # Allow long method names
