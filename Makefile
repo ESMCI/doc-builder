@@ -5,7 +5,7 @@
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 SOURCEDIR     = source
-DIRWITHCONFPY = $(if $(wildcard $(dir $(lastword $(MAKEFILE_LIST)))doc-builder),doc-builder,doc)
+DIRWITHCONFPY = $(if $(wildcard $(dir $(lastword $(MAKEFILE_LIST)))doc-builder),doc-builder,.)
 BUILDDIR      = build
 
 # Put it first so that "make" without argument is like "make help".
