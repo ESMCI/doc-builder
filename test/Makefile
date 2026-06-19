@@ -13,15 +13,12 @@ endif
 PYPATH=PYTHONPATH=..:
 
 # common args for running tests
-TEST_ARGS=-m unittest discover
+TEST_ARGS=-m pytest
 
 ifeq ($(debug), not-set)
-    ifeq ($(verbose), not-set)
-        # summary only output
-        TEST_ARGS+=--buffer
-    else
+    ifneq ($(verbose), not-set)
         # show individual test summary
-        TEST_ARGS+=--buffer --verbose
+        TEST_ARGS+=--verbose
     endif
 else
     # show detailed test output
@@ -45,11 +42,11 @@ TEST_DIR = .
 #
 .PHONY : utest
 utest : FORCE
-	$(PYPATH) $(PYTHON) $(TEST_ARGS) --pattern 'test_unit_*.py'
+	$(PYPATH) $(PYTHON) $(TEST_ARGS) test_unit_*.py
 
 .PHONY : stest
 stest : FORCE
-	$(PYPATH) $(PYTHON) $(TEST_ARGS) --pattern 'test_sys_*.py'
+	$(PYPATH) $(PYTHON) $(TEST_ARGS) test_sys_*.py
 
 .PHONY : test
 test : utest stest
