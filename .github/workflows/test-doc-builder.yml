@@ -51,8 +51,8 @@ jobs:
           git config --global user.email "ctsm-developer@institute.edu"
           micromamba run -n doc-builder-testing make test
 
-  lint-and-test-conda:
-    name: Lint and test in Conda env
+  lint-and-black:
+    name: Check pylint and black
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,20 +79,12 @@ jobs:
           cd test
           micromamba run -n doc-builder-testing make black
 
-      - name: Unit/system tests
-        if: success() || failure()
-        run: |
-          cd test
-          git config --global user.name "CTSM Developer"
-          git config --global user.email "ctsm-developer@institute.edu"
-          micromamba run -n doc-builder-testing make test
-
   # File an issue if any of above jobs failed during a scheduled or manual run
   file-issue-on-failure:
     if: |
-      (needs.test-python.result == 'failure' || needs.lint-and-test-conda.result == 'failure') &&
+      (needs.test-python.result == 'failure' || needs.lint-and-black.result == 'failure') &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-    needs: [test-python, lint-and-test-conda]
+    needs: [test-python, lint-and-black]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
