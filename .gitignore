@@ -1,8 +1,20 @@
 # editor files
 *~
 *.bak
+*.swp
 
 # generated python files
 *.pyc
 
 .coverage
+
+# Things copied to source/ during build
+source/conf.py
+source/substitutions.py
+source/_templates
+source/_static
+
+# Standard doc-build names
+_build/
+_publish/
+
