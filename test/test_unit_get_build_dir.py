@@ -4,12 +4,7 @@
 
 import shutil
 
-try:
-    # For python2; needs pip install mock
-    import mock
-except ImportError:
-    # For python3
-    from unittest import mock
+from unittest import mock
 import os
 
 # pylint: disable=import-error,no-name-in-module,attribute-defined-outside-init
