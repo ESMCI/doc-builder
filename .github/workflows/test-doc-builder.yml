@@ -35,13 +35,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Set up conda environment
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: doc-builder-testing
+          environment-file: test/python_test_conda.yml
+          cache-environment: true
+          cache-downloads: true
+
       - name: Unit/system tests
         if: success() || failure()
         run: |
           cd test
           git config --global user.name "CTSM Developer"
           git config --global user.email "ctsm-developer@institute.edu"
-          make test
+          micromamba run -n doc-builder-testing make test
 
   lint-and-test-conda:
     name: Lint and test in Conda env
