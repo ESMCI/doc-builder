@@ -16,9 +16,6 @@ import argparse
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir))
 
-DOC_BUILDER_IS_SUBMODULE = os.path.exists("doc-builder")
-
-
 # pylint: disable=import-error,no-name-in-module,wrong-import-position
 from doc_builder.build_docs import (
     main as build_docs,
@@ -47,6 +44,8 @@ from version_list import (
 SOURCE = "source"
 VERSIONS_PY = os.path.join("version_list.py")
 MAKEFILE = "Makefile"
+
+DOC_BUILDER_IS_SUBMODULE = os.path.exists("doc-builder")
 
 
 def get_static_templates_path_relative_to_here(args, path):
@@ -78,6 +77,7 @@ def setup_this_ref(args):
         permanent_files.append("doc-builder")
 
     # Check some things about "permanent" files before checkout
+    print(f"{os.getcwd()=}")
     for filename in permanent_files:
         check_permanent_file(filename)
 
