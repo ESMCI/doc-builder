@@ -28,8 +28,12 @@ from doc_builder.sys_utils import (
 )
 from doc_builder.build_commands import get_container_cli_tool
 
-# Change to the parent director of doc-builder and add to Python path
-os.chdir(os.path.join(os.path.dirname(__file__), os.pardir))
+# Change to the parent directory of our version_list.py so we can add it to Python path
+DOC_BUILDER_IS_SUBMODULE = os.path.exists("doc-builder")
+new_wd = os.path.join(os.path.dirname(__file__), os.pardir)
+if DOC_BUILDER_IS_SUBMODULE:
+    new_wd = os.path.join(new_wd, os.pardir)
+os.chdir(new_wd)
 sys.path.insert(0, os.getcwd())
 
 # Import our definitions of each documentation version.
@@ -44,8 +48,6 @@ from version_list import (
 SOURCE = "source"
 VERSIONS_PY = os.path.join("version_list.py")
 MAKEFILE = "Makefile"
-
-DOC_BUILDER_IS_SUBMODULE = os.path.exists("doc-builder")
 
 
 def get_static_templates_path_relative_to_here(args, path):
