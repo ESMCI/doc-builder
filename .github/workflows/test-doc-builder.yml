@@ -53,23 +53,23 @@ jobs:
           lfs: true
 
       - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@v3
+        uses: mamba-org/setup-micromamba@v2
         with:
-          activate-environment: doc-builder-testing
+          environment-name: doc-builder-testing
           environment-file: test/python_test_conda.yml
-          channels: conda-forge
-          auto-activate-base: false
+          cache-environment: true
+          cache-downloads: true
 
       - name: Pylint
         run: |
           cd test
-          conda run -n doc-builder-testing make lint
+          micromamba run -n doc-builder-testing make lint
 
       - name: Black
         if: success() || failure()
         run: |
           cd test
-          conda run -n doc-builder-testing make black
+          micromamba run -n doc-builder-testing make black
 
       - name: Unit/system tests
         if: success() || failure()
@@ -77,7 +77,7 @@ jobs:
           cd test
           git config --global user.name "CTSM Developer"
           git config --global user.email "ctsm-developer@institute.edu"
-          conda run -n doc-builder-testing make test
+          micromamba run -n doc-builder-testing make test
 
   # File an issue if any of above jobs failed during a scheduled or manual run
   file-issue-on-failure:
