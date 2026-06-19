@@ -15,14 +15,15 @@ permissions:
   contents: read
 jobs:
 
-  test-python-oldest:
+  test-python:
     name: Test in Python ${{ matrix.python-version }}
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         # If testing with in "act" on Macs, make sure to add '--container-architecture linux/amd64'.
-        python-version: [3.7]
+        # Even then, old Python versions might not be available.
+        python-version: [3.7, 3.x]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,33 +41,6 @@ jobs:
           cd test
           git config --global user.name "CTSM Developer"
           git config --global user.email "ctsm-developer@institute.edu"
-          make test
-
-  test-python-latest:
-    name: Test in Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # If testing with in "act" on Macs, make sure to add '--container-architecture linux/amd64'.
-        # Even then, old Python versions might not be available.
-        python-version: [3.x]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Unit/system tests
-        run: |
-          cd test
-          git config --global --global user.name "CTSM Developer"
-          git config --global --global user.email "ctsm-developer@institute.edu"
           make test
 
   lint-and-test-conda:
@@ -108,9 +82,9 @@ jobs:
   # File an issue if any of above jobs failed during a scheduled or manual run
   file-issue-on-failure:
     if: |
-      (needs.test-python-oldest.result == 'failure' || needs.test-python-latest.result == 'failure' || needs.lint-and-test-conda.result == 'failure') &&
+      (needs.test-python.result == 'failure' || needs.lint-and-test-conda.result == 'failure') &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-    needs: [test-python-oldest, test-python-latest, lint-and-test-conda]
+    needs: [test-python, lint-and-test-conda]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
