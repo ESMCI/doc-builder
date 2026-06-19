@@ -3,16 +3,17 @@
 """Unit test driver for get_build_command function"""
 
 import os
-import unittest
 from unittest.mock import patch
 
-# pylint: disable=import-error
+# pylint: disable=import-error,attribute-defined-outside-init
 from doc_builder.build_commands import (
     get_build_command,
     get_mount_arg,
     get_container_cli_tool,
     DEFAULT_IMAGE,
 )
+
+import pytest
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -21,11 +22,11 @@ from doc_builder.build_commands import (
 # pylint: disable=line-too-long
 
 
-class TestGetBuildCommand(unittest.TestCase):
+class TestGetBuildCommand:
     """Test the get_build_command function"""
 
-    def setUp(self):
-        """Run this before each test"""
+    def setup_method(self):
+        """To run at the beginning of each test"""
 
         # Get current user's UID and GID
         uid = os.getuid()
@@ -50,11 +51,10 @@ class TestGetBuildCommand(unittest.TestCase):
             "4",
             "html",
         ]
-        self.assertEqual(expected, build_command)
+        assert expected == build_command
 
-    def test_custom_conf_py_path(self):
+    def test_custom_conf_py_path(self, conf_py_path):
         """Tests usage with --conf-py-path as file"""
-        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/foo",
             run_from_dir="/irrelevant/path",
@@ -72,12 +72,12 @@ class TestGetBuildCommand(unittest.TestCase):
             "4",
             "html",
         ]
-        self.assertEqual(expected, build_command)
+        assert expected == build_command
 
     def test_nonexistent_conf_py_path(self):
         """Tests error with --conf-py-path as nonexistent file"""
         conf_py_path = "nwirefeirourboub"
-        with self.assertRaisesRegex(FileNotFoundError, "--conf-py-path not found"):
+        with pytest.raises(FileNotFoundError, match="--conf-py-path not found"):
             get_build_command(
                 build_dir="/path/to/foo",
                 run_from_dir="/irrelevant/path",
@@ -108,13 +108,12 @@ class TestGetBuildCommand(unittest.TestCase):
             "4",
             "html",
         ]
-        self.assertEqual(expected, build_command)
+        assert expected == build_command
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
-    def test_container(self, mock_get_toplevel_of_doc_builder_parent):
+    def test_container(self, mock_get_toplevel_of_doc_builder_parent, conf_py_path):
         """Tests usage with container"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
-        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/username/foorepos/foodocs/versions/main",
             run_from_dir="/path/to/username/foorepos/foocode/doc",
@@ -150,7 +149,7 @@ class TestGetBuildCommand(unittest.TestCase):
             "html",
         ]
         print("build_command: +", " ".join(build_command))
-        self.assertEqual(expected, build_command)
+        assert expected == build_command
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
     def test_container_relpath(self, mock_get_toplevel_of_doc_builder_parent):
@@ -189,13 +188,14 @@ class TestGetBuildCommand(unittest.TestCase):
             "4",
             "html",
         ]
-        self.assertEqual(expected, build_command)
+        assert expected == build_command
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
-    def test_container_no_clitool_given(self, mock_get_toplevel_of_doc_builder_parent):
+    def test_container_no_clitool_given(
+        self, mock_get_toplevel_of_doc_builder_parent, conf_py_path
+    ):
         """Tests usage with container"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
-        conf_py_path = os.path.join(os.path.dirname(__file__), "conf.py")
         build_command = get_build_command(
             build_dir="/path/to/username/foorepos/foodocs/versions/main",
             run_from_dir="/path/to/username/foorepos/foocode/doc",
@@ -230,13 +230,13 @@ class TestGetBuildCommand(unittest.TestCase):
             "html",
         ]
         print("build_command: +", " ".join(build_command))
-        self.assertEqual(build_command, [get_container_cli_tool()] + expected)
+        assert build_command == [get_container_cli_tool()] + expected
 
     @patch("doc_builder.sys_utils.get_toplevel_of_doc_builder_parent")
     def test_container_builddir_not_in_db_checkout(self, mock_get_toplevel_of_doc_builder_parent):
         """If build_dir is not in parent of doc-builder, should raise an exception"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
-        with self.assertRaisesRegex(RuntimeError, "build directory must be somewhere in"):
+        with pytest.raises(RuntimeError, match="build directory must be somewhere in"):
             _ = get_build_command(
                 build_dir="/path/to/other/foorepos/foodocs/versions/main",
                 run_from_dir="/path/to/username/foorepos/foocode/doc",
@@ -250,7 +250,7 @@ class TestGetBuildCommand(unittest.TestCase):
     def test_container_runfromdir_not_in_db_parent(self, mock_get_toplevel_of_doc_builder_parent):
         """If run_from_dir is not in parent of doc-builder, should raise an exception"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
-        with self.assertRaisesRegex(RuntimeError, "build_docs must be run from somewhere in"):
+        with pytest.raises(RuntimeError, match="build_docs must be run from somewhere in"):
             _ = get_build_command(
                 build_dir="/path/to/username/foorepos/foodocs/versions/main",
                 run_from_dir="/path/to/other/foorepos/foocode/doc",
@@ -264,9 +264,9 @@ class TestGetBuildCommand(unittest.TestCase):
     def test_container_runfromdir_relative(self, mock_get_toplevel_of_doc_builder_parent):
         """If run_from_dir is relative, should raise an exception"""
         mock_get_toplevel_of_doc_builder_parent.return_value = "/path/to/username"
-        with self.assertRaisesRegex(
+        with pytest.raises(
             RuntimeError,
-            "Expect absolute path; got",
+            match="Expect absolute path; got",
         ):
             _ = get_build_command(
                 build_dir="/path/to/username/foorepos/foodocs/versions/main",
@@ -276,7 +276,3 @@ class TestGetBuildCommand(unittest.TestCase):
                 container_name="foo",
                 version="None",
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

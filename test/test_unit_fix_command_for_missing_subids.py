@@ -3,13 +3,14 @@
 """Unit test driver for _fix_command_for_missing_subids and the retry logic in run_build_command"""
 
 import subprocess
-import unittest
 from argparse import Namespace
 from unittest.mock import patch, MagicMock
 
-# pylint: disable=import-error
+# pylint: disable=import-error,attribute-defined-outside-init
 from doc_builder.build_docs import _fix_command_for_missing_subids, run_build_command
 from doc_builder.build_commands import DEFAULT_IMAGE
+
+import pytest
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -47,25 +48,26 @@ for x in _BASE_COMMAND:
         _FIXED_COMMAND.append(x)
 
 
-class TestFixCommandForMissingSubids(unittest.TestCase):
+class TestFixCommandForMissingSubids:
     """Test the _fix_command_for_missing_subids function"""
 
-    def setUp(self):
+    def setup_method(self):
+        """To run at the beginning of each test"""
         self.result = _fix_command_for_missing_subids(list(_BASE_COMMAND))
 
     def test_removes_U_suffix_from_mount(self):
         """The :U suffix should be removed from volume mount arguments"""
-        self.assertIn("/path/to/repo:/home/user/mounted_home", self.result)
-        self.assertNotIn("/path/to/repo:/home/user/mounted_home:U", self.result)
+        assert "/path/to/repo:/home/user/mounted_home" in self.result
+        assert "/path/to/repo:/home/user/mounted_home:U" not in self.result
 
     def test_changes_user_to_root(self):
         """--user should be changed to 0:0"""
         user_idx = self.result.index("--user")
-        self.assertEqual(self.result[user_idx + 1], _FIXED_USER_STR)
+        assert self.result[user_idx + 1] == _FIXED_USER_STR
 
     def test_preserves_other_args(self):
         """Arguments that aren't --user or :U mounts should be unchanged"""
-        self.assertEqual(_FIXED_COMMAND, self.result)
+        assert _FIXED_COMMAND == self.result
 
     def test_no_U_suffix_only_changes_user(self):
         """A command without :U mount should only change --user"""
@@ -81,8 +83,8 @@ class TestFixCommandForMissingSubids(unittest.TestCase):
             "html",
         ]
         result = _fix_command_for_missing_subids(command)
-        self.assertEqual(result[result.index("--user") + 1], _FIXED_USER_STR)
-        self.assertIn("type=bind,source=/path,target=/home/user/mounted_home", result)
+        assert result[result.index("--user") + 1] == _FIXED_USER_STR
+        assert "type=bind,source=/path,target=/home/user/mounted_home" in result
 
 
 def _make_options():
@@ -98,7 +100,7 @@ def _make_options():
 
 
 @patch("doc_builder.build_docs.start_container_software")
-class TestRunBuildCommandRetry(unittest.TestCase):
+class TestRunBuildCommandRetry:
     """Test that run_build_command retries with fixed args on chown failure"""
 
     @patch("doc_builder.build_docs.subprocess.run")
@@ -124,9 +126,9 @@ class TestRunBuildCommandRetry(unittest.TestCase):
         assert mock_run.call_count == 2
         retry_cmd = mock_run.call_args_list[1][0][0]
         user_idx = retry_cmd.index("--user")
-        self.assertEqual(retry_cmd[user_idx + 1], _FIXED_USER_STR)
-        self.assertNotIn("/path/to/repo:/home/user/mounted_home:U", retry_cmd)
-        self.assertIn("/path/to/repo:/home/user/mounted_home", retry_cmd)
+        assert retry_cmd[user_idx + 1] == _FIXED_USER_STR
+        assert "/path/to/repo:/home/user/mounted_home:U" not in retry_cmd
+        assert "/path/to/repo:/home/user/mounted_home" in retry_cmd
 
     @patch("doc_builder.build_docs.subprocess.run")
     def test_raises_on_other_error(self, mock_run, _mock_start):
@@ -138,7 +140,7 @@ class TestRunBuildCommandRetry(unittest.TestCase):
             stderr=b"Error: something else went wrong",
         )
 
-        with self.assertRaises(subprocess.CalledProcessError):
+        with pytest.raises(subprocess.CalledProcessError):
             run_build_command(
                 build_command=list(_BASE_COMMAND),
                 version="None",
@@ -157,7 +159,3 @@ class TestRunBuildCommandRetry(unittest.TestCase):
         )
 
         mock_run.assert_called_once()
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -2,20 +2,22 @@
 
 """Unit test driver for command-line arg parsing"""
 
-import unittest
 
 import os
 from doc_builder.build_docs import is_web_url, commandline_options  # pylint: disable=import-error
 
+import pytest
 
-class TestCmdlineArgs(unittest.TestCase):
+
+class TestCmdlineArgs:
     """Test the command-line arguments and parsing"""
 
     # Allow long method names
     # pylint: disable=invalid-name
 
-    def setUp(self):
-        """Run this before each test"""
+    def setup_method(self):
+        # pylint: disable=attribute-defined-outside-init
+        """To run at the beginning of each test"""
         self.fake_builddir = ["-b", "abc"]
         self.fake_abspath = os.path.sep + os.path.join("some", "abs", "path")
         self.fake_relpath = os.path.join(os.pardir, "some", "rel", "path")
@@ -32,7 +34,7 @@ class TestCmdlineArgs(unittest.TestCase):
         ]
         for url in urls:
             print(url)
-            self.assertTrue(is_web_url(url))
+            assert is_web_url(url)
 
     def test_isnt_web_url(self):
         """Ensure that all these are NOT valid web URLs"""
@@ -45,7 +47,7 @@ class TestCmdlineArgs(unittest.TestCase):
 
         for url in urls:
             print(url)
-            self.assertFalse(is_web_url(url))
+            assert not is_web_url(url)
 
     def test_no_versions_no_siteroot(self):
         """Ensure no error when you don't provide --versions or --siteroot"""
@@ -62,7 +64,7 @@ class TestCmdlineArgs(unittest.TestCase):
     def test_versions_and_siteroot_rel_error(self):
         """Ensure error when you provide --versions and a valid relative path for --site-root"""
         msg = "--site-root is neither a web URL nor an absolute path"
-        with self.assertRaisesRegex(RuntimeError, msg):
+        with pytest.raises(RuntimeError, match=msg):
             commandline_options(
                 self.fake_builddir + ["--versions", "--site-root", self.fake_relpath]
             )
@@ -70,30 +72,26 @@ class TestCmdlineArgs(unittest.TestCase):
     def test_versions_and_siteroot_neither_error(self):
         """Ensure error when you provide --versions and just some string for --site-root"""
         msg = "--site-root is neither a web URL nor an absolute path"
-        with self.assertRaisesRegex(RuntimeError, msg):
+        with pytest.raises(RuntimeError, match=msg):
             commandline_options(self.fake_builddir + ["--versions", "--site-root", "abc123"])
 
     def test_versions_but_no_siteroot_error(self):
         """Ensure error when you provide --versions but not --site-root"""
         msg = "--site-root must be provided when --versions is enabled"
-        with self.assertRaisesRegex(RuntimeError, msg):
+        with pytest.raises(RuntimeError, match=msg):
             commandline_options(self.fake_builddir + ["--versions"])
 
     def test_verbose_default_false(self):
         """Verbose should default to False"""
         opts = commandline_options(self.fake_builddir)
-        self.assertFalse(opts.verbose)
+        assert not opts.verbose
 
     def test_verbose_long_flag(self):
         """--verbose should set verbose to True"""
         opts = commandline_options(self.fake_builddir + ["--verbose"])
-        self.assertTrue(opts.verbose)
+        assert opts.verbose
 
     def test_verbose_short_flag(self):
         """-V should set verbose to True"""
         opts = commandline_options(self.fake_builddir + ["-V"])
-        self.assertTrue(opts.verbose)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert opts.verbose
