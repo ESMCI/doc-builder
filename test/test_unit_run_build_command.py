@@ -17,7 +17,6 @@ from doc_builder.build_docs import (  # pylint: disable=import-error
 
 import pytest
 
-
 # A minimal options object for testing (non-container)
 _BASE_OPTIONS = {
     "build_in_container": False,

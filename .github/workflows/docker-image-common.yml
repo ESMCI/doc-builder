@@ -73,20 +73,15 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      # # Check out all submodules because we might :literalinclude: something from one
-      # - name: Checkout all submodules
-      #   run: |
-      #     bin/git-fleximod update -o
+      - name: Set image tag for docs build
+        id: set-image-tag
+        run: |
+          echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | head -n 1 | cut -d',' -f1)" >> $GITHUB_ENV
 
-      # - name: Set image tag for docs build
-      #   id: set-image-tag
-      #   run: |
-      #     echo "IMAGE_TAG=$(echo '${{ steps.meta.outputs.tags }}' | head -n 1 | cut -d',' -f1)" >> $GITHUB_ENV
-
-      # - name: Build docs using Docker (Podman has trouble on GitHub runners)
-      #   id: build-docs
-      #   run: |
-      #     cd doc && ./build_docs -b ${PWD}/_build -c -d -i $IMAGE_TAG
+      - name: Build docs using Docker (Podman has trouble on GitHub runners)
+        id: build-docs
+        run: |
+          ./build_docs -b ${PWD}/_build -c -d -i $IMAGE_TAG
 
 
   check-version:

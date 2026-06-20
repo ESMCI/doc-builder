@@ -4,7 +4,6 @@
 
 from doc_builder.output_utils import extract_sphinx_complaints  # pylint: disable=import-error
 
-
 # Sample lines that represent Sphinx complaints
 _WARNING_WITH_LOCATION = (
     "/path/to/file.rst:42: WARNING: toctree contains reference to nonexisting document 'missing'"

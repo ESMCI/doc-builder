@@ -1,14 +1,48 @@
-#!/usr/bin/env python3
+#!/usr/bin/env bash
+set -e
 
-"""Main driver wrapper around the doc_builder/build_docs utility.
+if [ ! -e doc-builder ]; then
+    # We're in the doc-builder directory itself
+    script="./tools/build_docs.py"
+    files_to_copy_to_source="conf.py substitutions.py _templates _static"
+    cp -a ${files_to_copy_to_source} source/
+else
+    # We're in a repo that has doc-builder as a submodule
+    script="./doc-builder/tools/build_docs.py"
 
-This tool wraps the build command to build sphinx-based documentation.
+    # Make sure the submodule is checked out. For now, we assume the repo is using git-fleximod to
+    # manage submodules.
+    "$(git rev-parse --show-toplevel)"/bin/git-fleximod update doc-builder
+fi
 
-This should be run from the directory that contains the Makefile for
-building the documentation.
-"""
+# Check if --verbose or -V was passed
+verbose=false
+for arg in "$@"; do
+    case "$arg" in
+        --verbose|-V) verbose=true; break ;;
+    esac
+done
 
-from doc_builder import build_docs  # pylint: disable=import-error
+if $verbose; then
+    echo "Running: make fetch-images"
+    make fetch-images
+else
+    make fetch-images > /dev/null 2>&1
+fi
 
-if __name__ == "__main__":
-    build_docs.main()
+if $verbose; then
+    echo "Running: ${script} $@"
+fi
+set +e
+${script} "$@"
+exit_code=$?
+set -e
+
+if [ ! -e doc-builder ]; then
+    # Clean up these things we copied
+    for f in ${files_to_copy_to_source}; do
+        rm -r "source/$f"
+    done
+fi
+
+exit $exit_code
