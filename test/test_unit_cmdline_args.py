@@ -2,7 +2,6 @@
 
 """Unit test driver for command-line arg parsing"""
 
-
 import os
 from doc_builder.build_docs import is_web_url, commandline_options  # pylint: disable=import-error
 

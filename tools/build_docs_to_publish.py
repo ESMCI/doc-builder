@@ -43,7 +43,6 @@ from version_list import (
     VERSION_LIST,
 )
 
-
 # Path to certain important files
 SOURCE = "source"
 VERSIONS_PY = os.path.join("version_list.py")
