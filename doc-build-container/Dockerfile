@@ -29,4 +29,4 @@ CMD ["/bin/bash", "-l"]
 
 LABEL org.opencontainers.image.title="Container for building documentation using doc-builder"
 LABEL org.opencontainers.image.source=https://github.com/ESMCI/doc-builder
-LABEL org.opencontainers.image.version="v2.0.1a"
+LABEL org.opencontainers.image.version="v2.0.1b"
