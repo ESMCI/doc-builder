@@ -58,7 +58,7 @@ jobs:
       - name: Build docs using container
         id: build-docs
         run: |
-          cd doc
+          [[ -e doc ]] && cd doc
           ./build_docs_to_publish -d --site-root https://esmci.github.io/doc-builder --verbose
 
       - name: Upload artifact
