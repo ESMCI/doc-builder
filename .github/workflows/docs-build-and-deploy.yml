@@ -52,7 +52,7 @@ jobs:
       # Check out all submodules because we might :literalinclude: something from one
       - name: Checkout all submodules
         run: |
-          bin/git-fleximod update -o
+          [[ -e bin/git-fleximod ]] && bin/git-fleximod update -o
 
       # When you copy this into your repo, update the --site-root URL. 
       - name: Build docs using container
