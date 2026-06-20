@@ -10,6 +10,7 @@ building the documentation.
 
 import os
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), os.pardir))
 
 from doc_builder import build_docs  # pylint: disable=import-error,wrong-import-position
