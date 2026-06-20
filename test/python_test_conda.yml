@@ -3,9 +3,8 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.7.12
-  - pip=24.0
-  - pytest=7.4.4
-
-  - pip:
-    - -r python_test_pip.txt
+  - python=3.14.3
+  - pip=26.1.2
+  - pytest=9.1.1
+  - pylint=4.0.6
+  - black=26.5.1
