@@ -198,8 +198,13 @@ def build_docs(code_dir, files, verbose, pr_info):
     set_up_git(pr_info, stdout)
 
     print("Getting submodules...")
-    os.chmod(path := "bin/git-fleximod", os.stat(path).st_mode | stat.S_IXUSR)
-    subprocess.check_call([path, "update"], stdout=stdout)
+    if os.path.exists(".gitmodules"):
+        if os.path.exists(path := "bin/git-fleximod"):
+            os.chmod(path, os.stat(path).st_mode | stat.S_IXUSR)
+            submod_cmd = [path, "update"]
+        else:
+            submod_cmd = ["git", "submodule", "update", "--init"]
+        subprocess.check_call(submod_cmd, stdout=stdout)
 
     print("Building docs...")
     os.chdir("doc")
@@ -354,7 +359,7 @@ def parse_args():
     )
     if not result.returncode:
         raise RuntimeError(
-            "Clone parent directory is (in) a git repo, which would cause git-fleximod problems: "
+            "Clone parent directory is (in) a git repo, which would cause problems: "
             f"'{clone_parent}'"
         )
 
