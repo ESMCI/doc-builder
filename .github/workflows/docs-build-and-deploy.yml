@@ -45,6 +45,7 @@ jobs:
         with:
           # Get all history, ensuring all branches are available for checkout
           fetch-depth: 0
+          submodules: true
 
       - name: Setup Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b  # v5
