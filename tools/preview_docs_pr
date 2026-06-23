@@ -16,9 +16,7 @@ import shutil
 
 # Get default location in which to clone the code
 SCRATCH = os.getenv("SCRATCH")
-DEFAULT_EXTRACTION_DIR_BASENAME = (
-    "preview_docs_pr.{}.{}.pr-{}"  # repo owner, repo name, PR number
-)
+DEFAULT_EXTRACTION_DIR_BASENAME = "preview_docs_pr.{}.{}.pr-{}"  # repo owner, repo name, PR number
 DEFAULT_EXTRACTION_DIR = os.path.join(
     SCRATCH if SCRATCH else "",
     DEFAULT_EXTRACTION_DIR_BASENAME,
@@ -92,9 +90,7 @@ def pick_ref(pr):
     # Note that "mergeable" only refers to whether there are Git conflicts; it doesn't "know"
     # anything about PR tests that are passing or failing.
     if not mergeable:
-        print(
-            "PR branch has merge conflicts, so merged docs can't be previewed. Exiting."
-        )
+        print("PR branch has merge conflicts, so merged docs can't be previewed. Exiting.")
         sys.exit(1)
 
     # If PR was closed without merging, GitHub supposedly nulls out merge_commit_sha, so that
@@ -150,7 +146,7 @@ def extract_zip(extraction_dir, zip_path):
 def get_extracted_path(extraction_dir, zip_path):
     """Get the path where the code will actually be extracted to"""
     with zipfile.ZipFile(zip_path, "r") as zf:
-            # GitHub zips have a single top-level folder like "owner-repo-<sha>/"
+        # GitHub zips have a single top-level folder like "owner-repo-<sha>/"
         top_level = zf.namelist()[0].split("/")[0]
         if extraction_dir is None:
             extracted_path = top_level
@@ -163,7 +159,7 @@ def submodule_method_to_use(zip_path: str):
     """Get the submodule update method to use, if any"""
     submodule_method = None
     top_level = get_extracted_path(None, zip_path)
-    with zipfile.ZipFile(zip_path, 'r') as zf:
+    with zipfile.ZipFile(zip_path, "r") as zf:
         if os.path.join(top_level, ".gitmodules") in zf.namelist():
             git_fleximod = os.path.join("bin", "git-fleximod")
             if os.path.join(top_level, git_fleximod) in zf.namelist():
@@ -171,7 +167,6 @@ def submodule_method_to_use(zip_path: str):
             else:
                 submodule_method = "git submodule"
     return submodule_method
-
 
 
 def download_pr_code(pr_url, extraction_dir, overwrite, stdout, token=None):
@@ -196,8 +191,7 @@ def download_pr_code(pr_url, extraction_dir, overwrite, stdout, token=None):
     if os.path.exists(code_dir):
         if not overwrite:
             raise FileExistsError(
-                "Clone directory exists; add -o/--overwrite to overwrite:"
-                f"'{code_dir}'"
+                f"Clone directory exists; add -o/--overwrite to overwrite: '{code_dir}'"
             )
         print(f"Deleting existing clone dir: '{code_dir}'")
         shutil.rmtree(code_dir)
@@ -208,7 +202,7 @@ def download_pr_code(pr_url, extraction_dir, overwrite, stdout, token=None):
     # the repo.
     submodule_method = submodule_method_to_use(zip_path)
     if submodule_method == "git submodule":
-        
+
         # We don't need the zip file anymore
         print("Using regular git submodules, so deleting zip...")
         os.remove(zip_path)
@@ -365,9 +359,7 @@ def parse_args():
         type=str,
     )
 
-    extraction_dir_help_default = DEFAULT_EXTRACTION_DIR.format(
-        "REPO_OWNER", "REPO", "PR_NUM"
-    )
+    extraction_dir_help_default = DEFAULT_EXTRACTION_DIR.format("REPO_OWNER", "REPO", "PR_NUM")
     parser.add_argument(
         "--dir",
         "--extraction-dir",
@@ -410,9 +402,7 @@ def parse_args():
     args.extraction_dir = os.path.abspath(args.extraction_dir)
     clone_parent = os.path.dirname(args.extraction_dir)
     if not os.path.exists(clone_parent):
-        raise NotImplementedError(
-            f"Clone parent directory does not exist: '{clone_parent}'"
-        )
+        raise NotImplementedError(f"Clone parent directory does not exist: '{clone_parent}'")
 
     # Check that clone dir parent is not (in) a git repo
     result = subprocess.run(
@@ -432,7 +422,7 @@ def parse_args():
 def main():
     """Main function"""
     args = parse_args()
-    
+
     # Handle verbosity for subprocess calls
     if args.verbose:
         stdout = None
@@ -445,7 +435,7 @@ def main():
     code_dir, files, pr_info = download_pr_code(
         args.pr_url, args.extraction_dir, args.overwrite, stdout, token=None
     )
-    
+
     build_docs(code_dir, files, args.verbose)
 
 
