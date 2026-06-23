@@ -165,9 +165,9 @@ def submodule_method_to_use(zip_path: str):
     top_level = get_extracted_path(None, zip_path)
     with zipfile.ZipFile(zip_path, 'r') as zf:
         if os.path.join(top_level, ".gitmodules") in zf.namelist():
-            git_fleximod_path = os.path.join(top_level, "bin", "git-fleximod")
-            if git_fleximod_path in zf.namelist():
-                submodule_method = git_fleximod_path
+            git_fleximod = os.path.join("bin", "git-fleximod")
+            if os.path.join(top_level, git_fleximod) in zf.namelist():
+                submodule_method = git_fleximod
             else:
                 submodule_method = "git submodule"
     return submodule_method
