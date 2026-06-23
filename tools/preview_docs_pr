@@ -202,62 +202,73 @@ def download_pr_code(pr_url, extraction_dir, overwrite, stdout, token=None):
     # the repo.
     submodule_method = submodule_method_to_use(zip_path)
     if submodule_method == "git submodule":
-
-        # We don't need the zip file anymore
-        print("Using regular git submodules, so deleting zip...")
-        os.remove(zip_path)
-
-        # Now clone
-        print("Cloning...")
-        owner, repo, pr_number = pr_info
-        # Initialize git repo in code_dir
-        cmd = ["git", "init", code_dir]
-        if verbose:
-            print(cmd)
-        subprocess.check_call(cmd, stdout=stdout)
-        # cd to code_dir
-        os.chdir(code_dir)
-        # Add origin
-        repo_url = f"https://github.com/{owner}/{repo}.git"
-        cmd = f"git remote add origin {repo_url}"
-        if verbose:
-            print(cmd)
-        subprocess.check_call(cmd.split(" "), stdout=stdout)
-        # Fetch origin to depth of 2, so we see a little of the real history if we do `git log`
-        cmd = f"git fetch --depth 2 origin refs/pull/{pr_number}/merge"
-        if verbose:
-            print(cmd)
-        # For the next two commands, pipe stderr to stdout to suppress it if we're not verbose.
-        # Unfortunately this is needed because this command puts normal printout in stderr.
-        subprocess.check_call(cmd.split(" "), stdout=stdout, stderr=stdout)
-        # Check out the merge commit
-        cmd = "git checkout FETCH_HEAD"
-        if verbose:
-            print(cmd)
-        subprocess.check_call(cmd.split(" "), stdout=stdout, stderr=stdout)
-
-        # Get submodules
-        print("Getting submodules...")
-        subprocess.check_call(
-            f"{submodule_method} update --init --recursive --depth 1".split(" "),
-            stdout=stdout,
-        )
-
+        download_pr_code_clone(stdout, verbose, pr_info, zip_path, code_dir, submodule_method)
     else:
-        # Unzip
-        code_dir = extract_zip(extraction_dir, zip_path)
-
-        # Set up so that git lfs works
-        os.chdir(code_dir)
-        set_up_git(pr_info, stdout)
-
-        # Get submodules, if needed
-        if os.path.exists(".gitmodules"):
-            print("Getting submodules...")
-            os.chmod(submodule_method, os.stat(submodule_method).st_mode | stat.S_IXUSR)
-            subprocess.check_call([submodule_method, "update"], stdout=stdout)
+        code_dir = download_pr_code_zip(extraction_dir, stdout, pr_info, zip_path, submodule_method)
 
     return code_dir, files, pr_info
+
+
+def download_pr_code_zip(extraction_dir, stdout, pr_info, zip_path, submodule_method):
+    """Extract downloaded code from ZIP and get submodules if needed"""
+
+    # Unzip
+    code_dir = extract_zip(extraction_dir, zip_path)
+
+    # Set up so that git lfs works
+    os.chdir(code_dir)
+    set_up_git(pr_info, stdout)
+
+    # Get submodules, if needed
+    if os.path.exists(".gitmodules"):
+        print("Getting submodules...")
+        os.chmod(submodule_method, os.stat(submodule_method).st_mode | stat.S_IXUSR)
+        subprocess.check_call([submodule_method, "update"], stdout=stdout)
+    return code_dir
+
+
+def download_pr_code_clone(stdout, verbose, pr_info, zip_path, code_dir, submodule_method):
+    """Clone the merge commit and get submodules"""
+
+    # We don't need the zip file anymore
+    print("Using regular git submodules, so deleting zip...")
+    os.remove(zip_path)
+
+    # Now clone
+    print("Cloning...")
+    owner, repo, pr_number = pr_info
+    # Initialize git repo in code_dir
+    cmd = ["git", "init", code_dir]
+    if verbose:
+        print(cmd)
+    subprocess.check_call(cmd, stdout=stdout)
+    # cd to code_dir
+    os.chdir(code_dir)
+    # Add origin
+    repo_url = f"https://github.com/{owner}/{repo}.git"
+    cmd = f"git remote add origin {repo_url}"
+    if verbose:
+        print(cmd)
+    subprocess.check_call(cmd.split(" "), stdout=stdout)
+    # Fetch origin to depth of 2, so we see a little of the real history if we do `git log`
+    cmd = f"git fetch --depth 2 origin refs/pull/{pr_number}/merge"
+    if verbose:
+        print(cmd)
+        # For the next two commands, pipe stderr to stdout to suppress it if we're not verbose.
+        # Unfortunately this is needed because this command puts normal printout in stderr.
+    subprocess.check_call(cmd.split(" "), stdout=stdout, stderr=stdout)
+    # Check out the merge commit
+    cmd = "git checkout FETCH_HEAD"
+    if verbose:
+        print(cmd)
+    subprocess.check_call(cmd.split(" "), stdout=stdout, stderr=stdout)
+
+    # Get submodules
+    print("Getting submodules...")
+    subprocess.check_call(
+        f"{submodule_method} update --init --recursive --depth 1".split(" "),
+        stdout=stdout,
+    )
 
 
 def build_docs(code_dir, files, verbose):
