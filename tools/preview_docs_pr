@@ -210,7 +210,7 @@ def download_pr_code(pr_url, extraction_dir, overwrite, stdout, token=None):
     else:
         download_pr_code_zip(extraction_dir, stdout, pr_info, zip_path, submodule_method)
 
-    return code_dir, files, pr_info
+    return code_dir, files
 
 
 def download_pr_code_zip(extraction_dir, stdout, pr_info, zip_path, submodule_method):
@@ -279,7 +279,8 @@ def build_docs(code_dir, files, verbose):
 
     print("Building docs...")
     os.chdir("doc")
-    os.chmod(path := "./build_docs", os.stat(path).st_mode | stat.S_IXUSR)
+    path = "./build_docs"
+    os.chmod(path, os.stat(path).st_mode | stat.S_IXUSR)
     output = []
     cmd = [path, "-b", "_build", "-d", "-c"]
     if verbose:
@@ -446,9 +447,10 @@ def main():
     # GitHub personal access tokens are currently not supported, but the code is all there. Just
     # need to think about how to implement them in a way that will prevent people from putting their
     # secrets into their shell history.
-    code_dir, files, pr_info = download_pr_code(
-        args.pr_url, args.extraction_dir, args.overwrite, stdout, token=None
-    )
+    (
+        code_dir,
+        files,
+    ) = download_pr_code(args.pr_url, args.extraction_dir, args.overwrite, stdout, token=None)
 
     build_docs(code_dir, files, args.verbose)
 
