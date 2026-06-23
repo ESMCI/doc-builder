@@ -32,7 +32,7 @@ PYLINT_ARGS=-j 2 --rcfile=.pylint.rc
 
 # source files
 SRC = \
-	../tools/build_docs*py \
+	../tools/* \
 	../doc_builder/*.py
 
 TEST_DIR = .
