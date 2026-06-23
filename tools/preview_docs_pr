@@ -204,7 +204,7 @@ def download_pr_code(pr_url, extraction_dir, overwrite, stdout, token=None):
     if submodule_method == "git submodule":
         download_pr_code_clone(stdout, verbose, pr_info, zip_path, code_dir, submodule_method)
     else:
-        code_dir = download_pr_code_zip(extraction_dir, stdout, pr_info, zip_path, submodule_method)
+        download_pr_code_zip(extraction_dir, stdout, pr_info, zip_path, submodule_method)
 
     return code_dir, files, pr_info
 
@@ -224,7 +224,6 @@ def download_pr_code_zip(extraction_dir, stdout, pr_info, zip_path, submodule_me
         print("Getting submodules...")
         os.chmod(submodule_method, os.stat(submodule_method).st_mode | stat.S_IXUSR)
         subprocess.check_call([submodule_method, "update"], stdout=stdout)
-    return code_dir
 
 
 def download_pr_code_clone(stdout, verbose, pr_info, zip_path, code_dir, submodule_method):
