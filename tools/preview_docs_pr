@@ -130,28 +130,12 @@ def download_zip(extraction_dir, token, pr_info, merge_commit_sha):
     return zip_path
 
 
-def extract_zip(extraction_dir, zip_path, overwrite):
+def extract_zip(extraction_dir, zip_path):
     """Unzip the code"""
     try:
+        # Unzip
+        extracted_path = get_extracted_path(extraction_dir, zip_path)
         with zipfile.ZipFile(zip_path, "r") as zf:
-            # GitHub zips have a single top-level folder like "owner-repo-<sha>/"
-            top_level = zf.namelist()[0].split("/")[0]
-            extracted_path = os.path.join(extraction_dir, top_level)
-
-            # If it already exists, it would be nice to skip re-extracting. But we would want to do
-            # a git reset to make sure it's actually at the right commit, and unfortunately the
-            # downloaded ZIP file doesn't include the git history. So instead, we delete the
-            # existing one first.
-            if os.path.exists(extracted_path):
-                if not overwrite:
-                    raise FileExistsError(
-                        "Clone directory exists; add -o/--overwrite to overwrite:"
-                        f"'{extracted_path}'"
-                    )
-                print(f"Deleting existing clone dir: '{extracted_path}'")
-                shutil.rmtree(extracted_path)
-
-            # Unzip
             print("Unzipping...")
             zf.extractall(extraction_dir)
         os.remove(zip_path)
@@ -163,8 +147,37 @@ def extract_zip(extraction_dir, zip_path, overwrite):
     return extracted_path
 
 
-def download_pr_code(pr_url, extraction_dir, overwrite, token=None):
+def get_extracted_path(extraction_dir, zip_path):
+    """Get the path where the code will actually be extracted to"""
+    with zipfile.ZipFile(zip_path, "r") as zf:
+            # GitHub zips have a single top-level folder like "owner-repo-<sha>/"
+        top_level = zf.namelist()[0].split("/")[0]
+        if extraction_dir is None:
+            extracted_path = top_level
+        else:
+            extracted_path = os.path.join(extraction_dir, top_level)
+    return extracted_path
+
+
+def submodule_method_to_use(zip_path: str):
+    """Get the submodule update method to use, if any"""
+    submodule_method = None
+    top_level = get_extracted_path(None, zip_path)
+    with zipfile.ZipFile(zip_path, 'r') as zf:
+        if os.path.join(top_level, ".gitmodules") in zf.namelist():
+            git_fleximod_path = os.path.join(top_level, "bin", "git-fleximod")
+            if git_fleximod_path in zf.namelist():
+                submodule_method = git_fleximod_path
+            else:
+                submodule_method = "git submodule"
+    return submodule_method
+
+
+
+def download_pr_code(pr_url, extraction_dir, overwrite, stdout, token=None):
     """Download code as if the pull request had been merged"""
+    verbose = stdout is None
+
     # Fetch PR information via GitHub API
     pr_info = parse_pr_url(pr_url)
     pr, files = fetch_pr_info_with_mergeability(*pr_info, token)
@@ -177,34 +190,84 @@ def download_pr_code(pr_url, extraction_dir, overwrite, token=None):
 
     # Download the zip (follows redirects automatically)
     zip_path = download_zip(extraction_dir, token, pr_info, merge_commit_sha)
+    code_dir = get_extracted_path(extraction_dir, zip_path)
 
-    # Unzip
-    code_dir = extract_zip(extraction_dir, zip_path, overwrite)
+    # For maximum safety, just delete any existing copies
+    if os.path.exists(code_dir):
+        if not overwrite:
+            raise FileExistsError(
+                "Clone directory exists; add -o/--overwrite to overwrite:"
+                f"'{code_dir}'"
+            )
+        print(f"Deleting existing clone dir: '{code_dir}'")
+        shutil.rmtree(code_dir)
+
+    # If the repo uses git-fleximod OR .gitmodules doesn't exist, we can proceed by just extracting
+    # the zip. Otherwise, the repo uses regular git submodules, but the zip will not contain the
+    # data necessary for `git submodule update` to work. In that case, we need to actually clone
+    # the repo.
+    submodule_method = submodule_method_to_use(zip_path)
+    if submodule_method == "git submodule":
+        
+        # We don't need the zip file anymore
+        print("Using regular git submodules, so deleting zip...")
+        os.remove(zip_path)
+
+        # Now clone
+        print("Cloning...")
+        owner, repo, pr_number = pr_info
+        # Initialize git repo in code_dir
+        cmd = ["git", "init", code_dir]
+        if verbose:
+            print(cmd)
+        subprocess.check_call(cmd, stdout=stdout)
+        # cd to code_dir
+        os.chdir(code_dir)
+        # Add origin
+        repo_url = f"https://github.com/{owner}/{repo}.git"
+        cmd = f"git remote add origin {repo_url}"
+        if verbose:
+            print(cmd)
+        subprocess.check_call(cmd.split(" "), stdout=stdout)
+        # Fetch origin to depth of 2, so we see a little of the real history if we do `git log`
+        cmd = f"git fetch --depth 2 origin refs/pull/{pr_number}/merge"
+        if verbose:
+            print(cmd)
+        # For the next two commands, pipe stderr to stdout to suppress it if we're not verbose.
+        # Unfortunately this is needed because this command puts normal printout in stderr.
+        subprocess.check_call(cmd.split(" "), stdout=stdout, stderr=stdout)
+        # Check out the merge commit
+        cmd = "git checkout FETCH_HEAD"
+        if verbose:
+            print(cmd)
+        subprocess.check_call(cmd.split(" "), stdout=stdout, stderr=stdout)
+
+        # Get submodules
+        print("Getting submodules...")
+        subprocess.check_call(
+            f"{submodule_method} update --init --recursive --depth 1".split(" "),
+            stdout=stdout,
+        )
+
+    else:
+        # Unzip
+        code_dir = extract_zip(extraction_dir, zip_path)
+
+        # Set up so that git lfs works
+        os.chdir(code_dir)
+        set_up_git(pr_info, stdout)
+
+        # Get submodules, if needed
+        if os.path.exists(".gitmodules"):
+            print("Getting submodules...")
+            os.chmod(submodule_method, os.stat(submodule_method).st_mode | stat.S_IXUSR)
+            subprocess.check_call([submodule_method, "update"], stdout=stdout)
 
     return code_dir, files, pr_info
 
 
-def build_docs(code_dir, files, verbose, pr_info):
+def build_docs(code_dir, files, verbose):
     """Build the documentation"""
-    os.chdir(code_dir)
-
-    # Handle verbosity for subprocess calls
-    if verbose:
-        stdout = None
-    else:
-        stdout = subprocess.DEVNULL
-
-    # Set up so that git lfs works
-    set_up_git(pr_info, stdout)
-
-    print("Getting submodules...")
-    if os.path.exists(".gitmodules"):
-        if os.path.exists(path := "bin/git-fleximod"):
-            os.chmod(path, os.stat(path).st_mode | stat.S_IXUSR)
-            submod_cmd = [path, "update"]
-        else:
-            submod_cmd = ["git", "submodule", "update", "--init"]
-        subprocess.check_call(submod_cmd, stdout=stdout)
 
     print("Building docs...")
     os.chdir("doc")
@@ -369,13 +432,21 @@ def parse_args():
 def main():
     """Main function"""
     args = parse_args()
+    
+    # Handle verbosity for subprocess calls
+    if args.verbose:
+        stdout = None
+    else:
+        stdout = subprocess.DEVNULL
+
     # GitHub personal access tokens are currently not supported, but the code is all there. Just
     # need to think about how to implement them in a way that will prevent people from putting their
     # secrets into their shell history.
     code_dir, files, pr_info = download_pr_code(
-        args.pr_url, args.extraction_dir, args.overwrite, token=None
+        args.pr_url, args.extraction_dir, args.overwrite, stdout, token=None
     )
-    build_docs(code_dir, files, args.verbose, pr_info)
+    
+    build_docs(code_dir, files, args.verbose)
 
 
 if __name__ == "__main__":
