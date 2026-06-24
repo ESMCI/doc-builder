@@ -78,7 +78,6 @@ def setup_this_ref(args):
         permanent_files.append("doc-builder")
 
     # Check some things about "permanent" files before checkout
-    print(f"{os.getcwd()=}")
     for filename in permanent_files:
         check_permanent_file(filename)
 
@@ -130,7 +129,7 @@ def checkout_and_build(version, permanent_files, args):
         build_args += ["--container-cli-tool", args.container_cli_tool]
     if args.verbose:
         build_args.append("--verbose")
-    print(" ".join(build_args))
+        print(f"build_logs command-line args: {build_args}")
     build_docs(build_args)
 
 
