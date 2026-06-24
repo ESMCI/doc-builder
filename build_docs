@@ -7,12 +7,19 @@ if [ ! -e doc-builder ]; then
     files_to_copy_to_source="conf.py substitutions.py _templates _static"
     cp -a ${files_to_copy_to_source} source/
 else
-    # We're in a repo that has doc-builder as a submodule
+    # We're in a repo that *includes* doc-builder
     script="./doc-builder/tools/build_docs.py"
 
-    # Make sure the submodule is checked out. For now, we assume the repo is using git-fleximod to
-    # manage submodules.
-    "$(git rev-parse --show-toplevel)"/bin/git-fleximod update doc-builder
+    # Make sure the doc-builder submodule is checked out. If doc-builder isn't a submodule but is
+    # instead manually included, we will perform the `else`, which is safe because it's a no-op in
+    # that situation.
+    # (Assume that if the repo uses git-fleximod, doc-builder is handled with it.)
+    git_fleximod_path="$(git rev-parse --show-toplevel)/bin/git-fleximod"
+    if [[ -e "${git_fleximod_path}" ]]; then
+        "${git_fleximod_path}" update doc-builder
+    else
+        git submodule update --init -- doc-builder
+    fi
 fi
 
 # Check if --verbose or -V was passed
