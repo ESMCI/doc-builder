@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
+# $scriptname will already be set if build_docs is getting called from build_docs_to_publish.
+# Otherwise, we need to set it to the basename of this script.
+if [[ -z "${scriptname}" ]]; then
+    scriptname="${0##*/}"
+fi
+
 if [ ! -e doc-builder ]; then
     # We're in the doc-builder directory itself
-    script="./tools/build_docs.py"
+    script="./tools/${scriptname}.py"
     files_to_copy_to_source="conf.py substitutions.py _templates _static"
     cp -a ${files_to_copy_to_source} source/
 else
     # We're in a repo that *includes* doc-builder
-    script="./doc-builder/tools/build_docs.py"
+    script="./doc-builder/tools/${scriptname}.py"
 
     # Make sure the doc-builder submodule is checked out. If doc-builder isn't a submodule but is
     # instead manually included, we will perform the `else`, which is safe because it's a no-op in
