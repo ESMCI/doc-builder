@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Info (markdown)
 
 This tool wraps the build command to build sphinx-based documentation.
