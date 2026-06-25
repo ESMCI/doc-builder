@@ -48,6 +48,18 @@ This is a Python file defining the versions of your documentation to be displaye
 
 Copy this from `doc-builder/`, then customize it as needed.
 
+## GitHub workflows
+
+There are various useful GitHub workflows at `doc-builder/.github/workflows/docs*yml`. These provide automatic testing and publication of your docs. If you'd like, copy them to your repo's `.github/workflows/` and customize them as needed. (Don't include any workflows except the `docs*yml` ones; the others are only useful in the doc-builder repo itself.)
+
+Your repository will probably need to be public if you want Workflows to run, at least for free. You will also need to enable Actions in your repo's settings.
+
+### Automatic publication
+
+The `docs-build-and-deploy.yml` workflow will automatically publish your documentation to GitHub Pages whenever you push (or merge a PR) to one of your documentation branches. To enable this, go to "Pages" in your repo's settings, then make sure "Source" is set to "GitHub Actions."
+
+If you're not going to use automatic publication, do not include `docs-build-and-deploy.yml` in your `.github/workflows/`.
+
 ## Customizing files copied from doc-builder
 
 In the files that you copy from doc-builder, there are various places you'll need to make changes in order to make them compatible with your repo. Search for "When you copy this into your repo" to find them all, and make the designated changes.
