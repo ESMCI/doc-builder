@@ -1,24 +1,24 @@
-name: Deploy static content to Pages
+name: Build and deploy docs
 
 on:
   push:
     # Run when a change to these files is pushed to any of these branches.
-    # When you copy this into your repo, you should update this list to include all the "ref"s you
-    # put in your version_list.py.
+    # When you copy this into your repo, you should:
+    # - Replace 'master' with the name of your repo's primary branch, if it's not master (e.g.,
+    #   main)
+    # - Delete 'add-github-workflows-with-tmp-docs' 
+    # - Add any branches you refer to with DocsVersion(..., ref=*) in version_list.py
     branches: ['master', 'add-github-workflows-with-tmp-docs']
-    # When you copy this into your repo, you should uncomment the following 2 lines:
     # paths:
+    #   - '.github/workflows/docs-build-and-deploy.yml'
+    #   - '.github/workflows/docs-build_to_publish-optionally-deploy.yml'
     #   - 'doc/**'
-    # And also make sure to add any files that you "include" in your docs that live outside doc/
+    # When you copy this into your repo:
+    # - Uncomment the "paths" block above
+    # - Make sure to add any files that you "include" in your docs that live outside doc/.
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
@@ -29,46 +29,18 @@ concurrency:
 jobs:
 
   build-and-deploy:
+    name: Call reusable workflow with deploy true
 
     # Only run on upstream repository.
     # When you copy this into your repo, replace this with yours. Case-sensitive!
     if: ${{ github.repository == 'ESMCI/doc-builder' }}
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    # Grant the GITHUB_TOKEN the write scopes needed to deploy to GitHub Pages.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-        with:
-          # Get all history, ensuring all branches are available for checkout
-          fetch-depth: 0
-          submodules: true
-
-      - name: Setup Pages
-        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b  # v5
-
-      # Check out all submodules because we might :literalinclude: something from one
-      - name: Checkout all submodules
-        if: ${{ hashFiles('bin/git-fleximod') != '' }}
-        run: bin/git-fleximod update -o
-
-      # When you copy this into your repo, update the --site-root URL. 
-      - name: Build docs using container
-        id: build-docs
-        run: |
-          [[ -e doc ]] && cd doc
-          ./build_docs_to_publish -d --site-root https://esmci.github.io/doc-builder --verbose
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@0252fc4ba7626f0298f0cf00902a25c6afc77fa8  # v3
-        with:
-          # Upload publish dir
-          # When you copy this into your repo, change this to 'doc/_publish'
-          path: '_publish'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@f33f41b675f0ab2dc5a6863c9a170fe83af3571e  # v4
+    uses: ./.github/workflows/docs-build_to_publish-optionally-deploy.yml
+    with:
+      deploy: true

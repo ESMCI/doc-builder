@@ -1,0 +1,49 @@
+name: Test building docs "to publish" when they're updated
+
+on:
+  workflow_call:
+    inputs:
+      deploy:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+
+  build_to_publish-optionally-deploy:
+    name: Run build_to_publish and optionally deploy docs
+    runs-on: ubuntu-latest
+
+    # Only associate this job with the github-pages environment when deploying.
+    environment:
+      name: ${{ inputs.deploy && 'github-pages' || '' }}
+      url: ${{ inputs.deploy && steps.deployment.outputs.page_url || '' }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          submodules: true
+
+      - name: Build docs
+        id: build-docs
+        run: |
+          [[ -e doc ]] && cd doc
+          git fetch
+          site_root="https://${GITHUB_REPOSITORY%/*}.github.io/${GITHUB_REPOSITORY#*/}"
+          PYTHONUNBUFFERED=1 ./build_docs_to_publish -r ${PWD}/_build -d --verbose --site-root "${site_root}"
+
+      # Subsequent steps should only happen if this workflow was called with deploy true
+
+      - name: Upload artifact
+        if: ${{ inputs.deploy }}
+        uses: actions/upload-pages-artifact@0252fc4ba7626f0298f0cf00902a25c6afc77fa8  # v3
+        with:
+          # Upload publish dir
+          path: 'doc/_publish'
+
+      - name: Deploy to GitHub Pages
+        if: ${{ inputs.deploy }}
+        id: deployment
+        uses: actions/deploy-pages@f33f41b675f0ab2dc5a6863c9a170fe83af3571e  # v4
