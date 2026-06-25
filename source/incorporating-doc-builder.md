@@ -67,3 +67,13 @@ In the files that you copy from doc-builder, there are various places you'll nee
 ## Things to delete from your repo's pre-existing `docs/`
 
 In addition to the files you're copying and customizing from doc-builder, if your repo already contains `conf.py` somewhere in `doc/`, delete it to avoid confusion. If there are things in there that `doc-builder/conf.py` doesn't have, and your existing docs won't build (either correctly or at all) after deleting your existing `conf.py`, [file a doc-builder issue](https://github.com/ESMCI/doc-builder/issues/new). Do NOT change `doc-builder/conf.py`.
+
+If your repo already has `_static/` and/or `_templates/` directories somewhere in `doc/`, delete them. doc-builder has its own versions.
+
+If you're planning to use automatic publication and your repo already contains built documentation, delete it.
+
+## Things to add to `.gitignore`
+
+Consider adding the following to your repo's `.gitignore` file:
+- `doc/_build` and `doc/_publish`: Directories created by suggested calls of the `build_docs*` scripts.
+- `doc/__pycache__`: Python cache.
