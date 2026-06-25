@@ -30,6 +30,8 @@ VERSION_LIST = [
     # ref=... refers to the branch in the repo with the frozen docs. The short_name will show up in
     # URL slugs and maybe elsewhere; it doesn't have to match the ref. display_name will be shown in
     # the version picker drop-down.
+    # When you copy this into your repo, replace this with any and all frozen versions you wish to
+    # build.
     DocsVersion(
         short_name="dummy-version",
         display_name="Dummy version",

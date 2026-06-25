@@ -6,6 +6,8 @@ Substitutions for Sphinx
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
+# When you copy this into your repo, update all values as needed.
+
 # pylint: disable=invalid-name
 
 #################################
@@ -65,6 +67,9 @@ tex = {
 ###############################
 ### Purely custom variables ###
 ###############################
+
+# When you copy this into your repo, you can keep these as examples if you want, but you can also
+# just delete them.
 
 nonparamfile_disclaimer_md = (
     "**Note:** The values here should be up-to-date with those used in {{version_label}},"
