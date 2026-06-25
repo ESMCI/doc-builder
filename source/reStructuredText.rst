@@ -1,6 +1,6 @@
 ***********************
 Info (reStructuredText)
-***********************
+*******************
 
 This tool wraps the build command to build sphinx-based documentation.
 
