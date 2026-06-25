@@ -1,0 +1,1 @@
+This directory contains files we don't want easily reachable in the published documentation; they're just for testing purposes. They WILL be available if someone knows the path, though!
