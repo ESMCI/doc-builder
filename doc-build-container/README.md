@@ -3,7 +3,7 @@ This directory and its Dockerfile are used to build a container for building doc
 
 ## Introduction
 
-This Readme tells you how to update the doc-build-container if a need to do so arises—for example, adding a Python module that brings new functionality in the build. After you've followed all these instructions, you will probably want to push an update to [doc-builder](https://github.com/ESMCI/doc-builder) that updates `DEFAULT_IMAGE` in [build_commands.py](https://github.com/ESMCI/doc-builder/blob/master/doc_builder/build_commands.py) to point to the new tag.
+This Readme tells you how to update the doc-build-container if a need to do so arises—for example, adding a Python module that brings new functionality in the build. After you've followed all these instructions, you will probably want to update `DEFAULT_IMAGE` in [build_commands.py](https://github.com/ESMCI/doc-builder/blob/master/doc_builder/build_commands.py) to point to the new tag.
 
 ## Building
 
