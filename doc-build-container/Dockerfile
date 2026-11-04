@@ -2,7 +2,7 @@
 # A base linux install + packages for building documentation #
 ##############################################################
 
-FROM python:3.13.2-alpine
+FROM python:3.13.13-alpine
 
 # Update the default packages and install some other necessary ones
 RUN apk update
@@ -29,4 +29,4 @@ CMD ["/bin/bash", "-l"]
 
 LABEL org.opencontainers.image.title="Container for building documentation using doc-builder"
 LABEL org.opencontainers.image.source=https://github.com/ESMCI/doc-builder
-LABEL org.opencontainers.image.version="v2.0.2"
+LABEL org.opencontainers.image.version="v2.0.3"
