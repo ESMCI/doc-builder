@@ -17,13 +17,18 @@ jobs:
 
   test-python:
     name: Test in Python ${{ matrix.python-version }}
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         # If testing with in "act" on Macs, make sure to add '--container-architecture linux/amd64'.
         # Even then, old Python versions might not be available.
-        python-version: [3.7, 3.x]
+        include:
+          # setup-python has no 3.7 builds for Ubuntu newer than 22.04
+          - python-version: "3.7"
+            os: ubuntu-22.04
+          - python-version: "3.x"
+            os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,21 +40,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Set up conda environment
-        uses: mamba-org/setup-micromamba@v2
-        with:
-          environment-name: doc-builder-testing
-          environment-file: test/python_test_conda.yml
-          cache-environment: true
-          cache-downloads: true
-
       - name: Unit/system tests
-        if: success() || failure()
         run: |
+          pip install pytest
           cd test
           git config --global user.name "CTSM Developer"
           git config --global user.email "ctsm-developer@institute.edu"
-          micromamba run -n doc-builder-testing make test
+          make test
 
   lint-and-black:
     name: Check pylint and black

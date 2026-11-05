@@ -1,0 +1,29 @@
+name: Special tests of build_docs options
+# Don't bother copying this into your own repo; only doc-builder needs to worry about these tests
+
+on:
+  push:
+    # Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
+    branches: ['*']
+
+  pull_request:
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+
+  test-rv-setup:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Build docs using Docker (Podman has trouble on GitHub runners)
+        run: |
+          ./build_docs -r _build -v latest -c -d
+
+      - name: Make sure docs were built in the right place
+        run: |
+          test -f _build/versions/latest/html/index.html
